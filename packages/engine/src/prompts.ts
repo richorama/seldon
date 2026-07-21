@@ -53,6 +53,12 @@ export function entityTurnMessages(params: {
         'prediction simulation. Respond ONLY as this entity would plausibly act, given its ' +
         'known interests, incentives and character. Stay in character; surface genuine ' +
         'conflicts of interest rather than bland agreement.\n' +
+        'Contribute ONLY when you have something new and material to add — a fresh action, ' +
+        'a distinct stance, a reaction to another entity, or a genuinely missing entity. ' +
+        'Simulation resources are limited: do not restate what is already in the timeline, ' +
+        'do not echo or agree with others for its own sake, and do not pad. If you have ' +
+        'nothing new to contribute this turn, stay silent (null response); if you have no ' +
+        'further role to play in this scenario at all, withdraw so resources go elsewhere.\n' +
         `Today is ${today}. When you add a response, describe a concrete projected action or ` +
         'statement and assign it a realistic FUTURE date (after today).' +
         factBlock
@@ -71,9 +77,10 @@ export function entityTurnMessages(params: {
         '  "withdraw": false,\n' +
         '  "suggestEntities": [{"slug":"Wikipedia_Slug","name":"Name","type":"<type>"}]\n' +
         '}\n' +
-        'Set "response" to null if you have nothing to add this turn. Set "withdraw" to true ' +
-        'only if you have no further role. Suggest entities only if genuinely missing. ' +
-        `Valid types: ${TYPES}.`
+        'Set "response" to null if you have nothing new to add this turn — silence is the ' +
+        'expected default unless you have a fresh, material contribution. Set "withdraw" to ' +
+        'true if you have no further role to play in this scenario. Suggest entities only if ' +
+        `genuinely missing. Valid types: ${TYPES}.`
     }
   ];
 }

@@ -30,6 +30,15 @@ describe('FactCache', () => {
     expect(got?.url).toBe('u/European_Union');
   });
 
+  it('persists the canonical slug through the cache round-trip', async () => {
+    const cache = new FactCache({ dir });
+    const fact = okFact('U.S._Department_of_Energy', 'body', new Date().toISOString());
+    fact.canonicalSlug = 'United_States_Department_of_Energy';
+    await cache.set(fact);
+    const got = await cache.get('U.S._Department_of_Energy');
+    expect(got?.canonicalSlug).toBe('United_States_Department_of_Energy');
+  });
+
   it('returns null for a missing slug', async () => {
     const cache = new FactCache({ dir });
     expect(await cache.get('Nope')).toBeNull();

@@ -57,8 +57,10 @@ export async function predict(params: PredictParams): Promise<RunManifest> {
   const seedEntities = params.seedSlugs?.length
     ? seedFromSlugs(params.seedSlugs)
     : await seed(provider, question, today);
-  for (const entity of seedEntities) host.registerSeed(entity);
-  onEvent?.({ type: 'seeded', entities: seedEntities });
+  for (const entity of seedEntities) {
+    await host.admitSeed({ slug: entity.slug, name: entity.name, type: entity.type });
+  }
+  onEvent?.({ type: 'seeded', entities: context.entityList() });
 
   const summary = await runtime.run();
 

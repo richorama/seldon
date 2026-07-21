@@ -9,6 +9,12 @@ export interface Fact {
   source: string;
   /** Source URL, when applicable. */
   url?: string;
+  /**
+   * The canonical slug for this entity, after resolving redirects/aliases.
+   * Used to deduplicate entities nominated under different slugs. Undefined
+   * when the source cannot canonicalise (e.g. the stub).
+   */
+  canonicalSlug?: string;
   /** ISO timestamp when the fact was fetched. */
   fetchedAt: string;
 }

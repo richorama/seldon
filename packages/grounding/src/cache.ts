@@ -8,6 +8,7 @@ interface FactMeta {
   status: Fact['status'];
   source: string;
   url?: string;
+  canonicalSlug?: string;
   fetchedAt: string;
 }
 
@@ -47,6 +48,12 @@ export class FactCache {
     const meta = JSON.parse(metaRaw) as FactMeta;
     if (this.isStale(meta.fetchedAt)) return null;
 
+    // Backfill canonicalSlug for entries cached before the field existed: the
+    // Wikipedia page URL already encodes the redirect-resolved canonical slug.
+    if (!meta.canonicalSlug && meta.url) {
+      meta.canonicalSlug = canonicalSlugFromUrl(meta.url);
+    }
+
     let text = '';
     if (meta.status === 'ok') {
       try {
@@ -66,6 +73,7 @@ export class FactCache {
       status: fact.status,
       source: fact.source,
       url: fact.url,
+      canonicalSlug: fact.canonicalSlug,
       fetchedAt: fact.fetchedAt
     };
     await writeFile(this.metaPath(fact.slug), JSON.stringify(meta, null, 2), 'utf8');
@@ -89,4 +97,10 @@ export class FactCache {
 /** Make a slug safe for use as a filename. */
 function safe(slug: string): string {
   return slug.replace(/[^A-Za-z0-9_.-]/g, '_');
+}
+
+/** Extract the canonical Wikipedia slug from a /wiki/<slug> page URL, if present. */
+function canonicalSlugFromUrl(url: string): string | undefined {
+  const match = /\/wiki\/([^?#]+)$/.exec(url);
+  return match ? decodeURIComponent(match[1]) : undefined;
 }

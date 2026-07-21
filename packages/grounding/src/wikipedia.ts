@@ -16,6 +16,7 @@ interface WikiSummary {
   title?: string;
   description?: string;
   extract?: string;
+  titles?: { canonical?: string };
   content_urls?: { desktop?: { page?: string } };
 }
 
@@ -63,6 +64,7 @@ export class WikipediaFetcher implements Fetcher {
         text: this.toMarkdown(data, extract),
         source: 'wikipedia',
         url: data.content_urls?.desktop?.page ?? `https://${this.lang}.wikipedia.org/wiki/${slug}`,
+        canonicalSlug: data.titles?.canonical ?? slug,
         fetchedAt: new Date().toISOString()
       };
     } catch {
