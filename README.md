@@ -136,22 +136,6 @@ npm run format         # prettier --write
 
 CI (GitHub Actions) runs lint, format check, build and tests on Node 20 & 22.
 
-## Publishing
-
-The packages under `packages/*` publish as the `@seldon/*` scope (public). The
-root package is `private` and is never published.
-
-```bash
-npm run build        # ensure dist/ is fresh
-npm run publish:dry  # inspect the tarballs (npm publish --dry-run --workspaces)
-npm run release      # npm publish --workspaces (requires npm auth + scope access)
-```
-
-Publish in dependency order if doing it manually: `@seldon/vagents`,
-`@seldon/llm`, `@seldon/grounding`, then `@seldon/engine`, then `@seldon/cli`.
-Each tarball ships only `dist/`, `README.md` and `LICENSE`; tests and sources
-are excluded.
-
 ## Caveat
 
 Seldon produces **hypothetical LLM reasoning**, not calibrated probabilities or

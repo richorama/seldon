@@ -1,39 +1,13 @@
 {
   "name": "@seldon/cli",
   "version": "0.1.0",
-  "description": "Command-line interface for Seldon, the LLM prediction machine inspired by Asimov's psychohistory.",
-  "keywords": [
-    "llm",
-    "prediction",
-    "forecasting",
-    "psychohistory",
-    "cli",
-    "seldon"
-  ],
+  "description": "Command-line interface for Seldon, the LLM prediction machine.",
   "license": "MIT",
-  "author": "Richard Astbury",
-  "homepage": "https://github.com/richorama/seldon#readme",
-  "bugs": "https://github.com/richorama/seldon/issues",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/richorama/seldon.git",
-    "directory": "packages/cli"
-  },
   "type": "module",
   "bin": {
-    "seldon": "dist/index.js"
+    "seldon": "./dist/index.js"
   },
   "main": "./dist/index.js",
-  "files": [
-    "dist",
-    "!dist/**/*.test.*"
-  ],
-  "engines": {
-    "node": ">=20"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "tsc --build"
   },
