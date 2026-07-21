@@ -1,0 +1,18 @@
+{
+  "name": "@seldon/llm",
+  "version": "0.1.0",
+  "description": "Thin LLM provider abstraction for Seldon. Azure OpenAI first, plus a deterministic mock provider for tests.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "openai": "^4.77.0"
+  }
+}
