@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/vagents" },
+    { "path": "packages/llm" },
+    { "path": "packages/grounding" },
+    { "path": "packages/engine" },
+    { "path": "packages/cli" }
+  ]
+}
