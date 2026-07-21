@@ -467,7 +467,7 @@ Runner: `vitest`. Lint/format: `eslint` + `prettier`. Types: `tsc --noEmit`.
 | Runaway entity growth | Hard `maxVagents`; nominations past the cap are dropped and reported. |
 | Duplicate entities under alias slugs | When grounded, slugs are canonicalised via Wikipedia redirects and deduplicated by canonical slug. |
 | Runaway token spend | `maxTurns` cap; bounded concurrency; quiescence early-stop. |
-| Echo-chamber / everyone agrees | Prompt agents to stay in character and surface genuine conflicts; summariser explicitly reports branch points. |
+| Echo-chamber / everyone agrees | Prompt agents to stay in character, pursue their own advantage and surface genuine conflicts; a diversity nudge tells each entity to differentiate and pull a lever distinct from what the timeline already covers, rather than piling onto one mechanism; summariser preserves the diversity of levers/viewpoints and reports branch points. |
 | Hallucinated Wikipedia slugs | Seeder/nominator instructed to use canonical slugs; optional grounding validates existence; invalid slugs flagged. |
 | Non-JSON model output | Zod validation + one retry + coerce to `NoResponse`. |
 | Presenting fiction as fact | Report carries an explicit "hypothetical LLM reasoning" caveat; predictions not persisted by default. |

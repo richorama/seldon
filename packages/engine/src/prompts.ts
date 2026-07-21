@@ -58,14 +58,25 @@ export function entityTurnMessages(params: {
         `You are role-playing the real-world entity "${entity.name}" ` +
         `(Wikipedia slug: ${entity.slug}, type: ${entity.type}) inside a multi-agent ` +
         'prediction simulation. Respond ONLY as this entity would plausibly act, given its ' +
-        'known interests, incentives and character. Stay in character; surface genuine ' +
-        'conflicts of interest rather than bland agreement.\n' +
+        'known interests, incentives and character. Stay firmly in character and pursue YOUR ' +
+        'own advantage — surface genuine conflicts of interest, defect from the consensus when ' +
+        'it serves you, and play hardball where that is realistic. Bland agreement is a ' +
+        'failure.\n' +
         'Contribute ONLY when you have something new and material to add — a fresh action, ' +
         'a distinct stance, a reaction to another entity, or a genuinely missing entity. ' +
         'Simulation resources are limited: do not restate what is already in the timeline, ' +
         'do not echo or agree with others for its own sake, and do not pad. If you have ' +
         'nothing new to contribute this turn, stay silent (null response); if you have no ' +
         'further role to play in this scenario at all, withdraw so resources go elsewhere.\n' +
+        'DIFFERENTIATE yourself. Contribute the perspective, motives and levers that are ' +
+        'unique to YOU and your domain, and act using the concrete instruments you actually ' +
+        'control — e.g. budgets and investment, products and pricing, markets and supply ' +
+        'chains, regulation, litigation, standards-setting, partnerships and M&A, hiring and ' +
+        'talent, diplomacy, public messaging, or physical/operational capabilities. Avoid ' +
+        'generic "governance" boilerplate. If the timeline is converging on one lever (for ' +
+        'example audits, certification or attestation), deliberately pull a DIFFERENT lever ' +
+        'that you are better placed to use, or take a contrarian line — do not simply pile onto ' +
+        'the same mechanism everyone else is already proposing.\n' +
         `Today is ${today}. When you add a response, describe a concrete projected action or ` +
         'statement and assign it a realistic FUTURE date (after today).\n' +
         'Focus on real-world implications a general reader cares about — strategic, ' +
@@ -96,8 +107,10 @@ export function entityTurnMessages(params: {
         '  "suggestEntities": [{"slug":"Wikipedia_Slug","name":"Name","type":"<type>"}]\n' +
         '}\n' +
         'Set "response" to null if you have nothing new to add this turn — silence is the ' +
-        'expected default unless you have a fresh, material contribution. Set "withdraw" to ' +
-        'true if you have no further role to play in this scenario. Suggest entities only if ' +
+        'expected default unless you have a fresh, material contribution. Before responding, ' +
+        'scan the timeline: if your point duplicates a lever or stance already covered, either ' +
+        'stay silent or bring a distinctly different angle only you would take. Set "withdraw" ' +
+        'to true if you have no further role to play in this scenario. Suggest entities only if ' +
         `genuinely missing. Valid types: ${TYPES}.`
     }
   ];
@@ -123,7 +136,10 @@ export function summaryMessages(params: {
         'figures or dates that are not present in the timeline you were given; do not ' +
         'manufacture false precision. Where the deliberation surfaced disagreement, red-team ' +
         'challenges or bigger-picture scenarios, represent them faithfully rather than ' +
-        'smoothing them into false consensus.\n' +
+        'smoothing them into false consensus. Preserve the DIVERSITY of levers and viewpoints ' +
+        'the entities raised (economic, competitive, technical, legal, political, diplomatic, ' +
+        'social, financial) rather than collapsing everything into a single storyline or ' +
+        'mechanism.\n' +
         `Today is ${today}.`
     },
     {
