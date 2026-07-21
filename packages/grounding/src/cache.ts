@@ -3,7 +3,15 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { Fact } from './fetcher.js';
 
+/**
+ * Bump when the meaning of a cached fact changes so older entries are ignored.
+ * v2: added the search-based slug resolver, so pre-resolver `not-found` entries
+ * must be re-evaluated rather than trusted.
+ */
+const SCHEMA_VERSION = 2;
+
 interface FactMeta {
+  schema?: number;
   slug: string;
   status: Fact['status'];
   reason?: Fact['reason'];
@@ -47,6 +55,8 @@ export class FactCache {
       return null;
     }
     const meta = JSON.parse(metaRaw) as FactMeta;
+    // Ignore entries written by an older cache schema (their semantics may differ).
+    if (meta.schema !== SCHEMA_VERSION) return null;
     if (this.isStale(meta.fetchedAt)) return null;
 
     // Backfill canonicalSlug for entries cached before the field existed: the
@@ -70,6 +80,7 @@ export class FactCache {
   async set(fact: Fact): Promise<void> {
     await mkdir(this.dir, { recursive: true });
     const meta: FactMeta = {
+      schema: SCHEMA_VERSION,
       slug: fact.slug,
       status: fact.status,
       reason: fact.reason,

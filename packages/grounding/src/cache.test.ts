@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FactCache } from './cache.js';
@@ -55,6 +55,20 @@ describe('FactCache', () => {
     const cache = new FactCache({ dir });
     await cache.set(okFact('a/b:c', 'body', new Date().toISOString()));
     expect((await cache.get('a/b:c'))?.text).toBe('body');
+  });
+
+  it('treats entries written by an older schema version as absent', async () => {
+    const cache = new FactCache({ dir });
+    // Simulate a pre-resolver cache file (no schema field).
+    const legacy = {
+      slug: 'Old_Entry',
+      status: 'unavailable',
+      reason: 'not-found',
+      source: 'wikipedia',
+      fetchedAt: new Date().toISOString()
+    };
+    await writeFile(join(dir, 'Old_Entry.json'), JSON.stringify(legacy), 'utf8');
+    expect(await cache.get('Old_Entry')).toBeNull();
   });
 });
 
