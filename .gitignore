@@ -4,6 +4,7 @@ dist/
 .env
 .env.*
 seldon-runs/
+runs/
 .seldon/
 coverage/
 .DS_Store

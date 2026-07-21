@@ -2,7 +2,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { AzureOpenAIProvider, azureConfigFromEnv, type LLMProvider } from '@seldon/llm';
-import { GroundingService } from '@seldon/grounding';
+import { GroundingService, WikipediaFetcher } from '@seldon/grounding';
 import {
   predict,
   manifestToMarkdown,
@@ -59,7 +59,7 @@ async function main(rawArgv: string[]): Promise<number> {
     question: args.question,
     provider,
     options,
-    grounding: args.ground ? new GroundingService() : undefined,
+    grounding: args.ground ? new GroundingService(new WikipediaFetcher()) : undefined,
     seedSlugs: args.seed ?? undefined,
     onEvent
   });

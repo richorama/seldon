@@ -35,7 +35,7 @@ Runs are bounded by hard caps on turns and total agents, so they can't run away.
 | ------------------- | -------------------------------------------------------------------------- |
 | `@seldon/vagents`   | Generic virtual-agent runtime: barrier turn loop, caps, bounded concurrency. Orleans-style, but single-process and LLM-oriented. Reusable beyond Seldon. |
 | `@seldon/llm`       | Thin `LLMProvider` abstraction. `AzureOpenAIProvider` + a deterministic `MockProvider` for tests. |
-| `@seldon/grounding` | Web-grounding scaffold: a `Fetcher` interface (stubbed in v1) and a TTL-aware, on-disk `FactCache` (JSON + Markdown). |
+| `@seldon/grounding` | Web grounding: a `Fetcher` interface with a Wikipedia REST implementation, and a TTL-aware, on-disk `FactCache` (JSON + Markdown). |
 | `@seldon/engine`    | The Seldon domain: seeding, entity vagents, the shared context/timeline, summarisation, and the `predict()` orchestrator. |
 | `@seldon/cli`       | The `seldon` command-line interface.                                       |
 
@@ -99,11 +99,16 @@ seldon predict "<question or news item>" [options]
 
 ## Web grounding (`--ground`)
 
-Grounding is designed end-to-end but ships with a **stub fetcher** in v1: the flag
-works, the cache is exercised, and entity prompts include any available fact text.
-Wiring a real source (Wikipedia REST, news/search) is a single-file change behind
-the `Fetcher` interface. Facts persist under `~/.seldon/cache/facts/` as a JSON
-metadata file plus a Markdown body per slug, honouring a TTL.
+With `--ground`, each entity is grounded on its **English Wikipedia summary**
+(via the REST API) before it deliberates, so agents reason from a real, current
+description rather than the model's frozen prior. Missing pages, network errors
+and timeouts degrade gracefully to "unavailable" for that entity — the run
+continues. Facts persist under `~/.seldon/cache/facts/` as a JSON metadata file
+plus a Markdown body per slug, honouring a TTL, so re-runs reuse them.
+
+The fetcher sits behind a `Fetcher` interface, so swapping in additional sources
+(news, search) is a single-file change. Responses record which fact-cache keys
+they were grounded on (`groundedOn`).
 
 ## Development
 

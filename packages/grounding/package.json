@@ -1,7 +1,7 @@
 {
   "name": "@seldon/grounding",
   "version": "0.1.0",
-  "description": "Web-grounding scaffold for Seldon: a Fetcher interface (stubbed in v1) and a persistent JSON+Markdown fact cache.",
+  "description": "Web-grounding for Seldon: a Fetcher interface (Wikipedia REST implementation) and a persistent JSON+Markdown fact cache.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
