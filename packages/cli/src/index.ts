@@ -87,8 +87,11 @@ async function main(rawArgv: string[]): Promise<number> {
 
 function logEvent(event: PredictEvent): void {
   if (event.type === 'seeded') {
-    process.stderr.write(`  seeded ${event.entities.length} entities: ` +
-      event.entities.map((e) => e.slug).join(', ') + '\n');
+    process.stderr.write(
+      `  seeded ${event.entities.length} entities: ` +
+        event.entities.map((e) => e.slug).join(', ') +
+        '\n'
+    );
   } else if (event.type === 'turn-complete') {
     process.stderr.write(
       `  turn ${event.turn}: +${event.responses} response(s), ${event.entities} entities\n`

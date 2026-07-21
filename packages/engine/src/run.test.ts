@@ -78,11 +78,23 @@ describe('predict (full mock run)', () => {
       return JSON.stringify({ response: null });
     });
 
-    const manifest = await predict({ question: 'Will A and B de-escalate?', provider, options: OPTIONS });
+    const manifest = await predict({
+      question: 'Will A and B de-escalate?',
+      provider,
+      options: OPTIONS
+    });
 
     // Timeline sorted by future date.
-    expect(manifest.timeline.map((r) => r.date)).toEqual(['2026-08-15', '2026-09-01', '2026-10-01']);
-    expect(manifest.timeline.map((r) => r.entitySlug)).toEqual(['Country_B', 'Country_A', 'Country_C']);
+    expect(manifest.timeline.map((r) => r.date)).toEqual([
+      '2026-08-15',
+      '2026-09-01',
+      '2026-10-01'
+    ]);
+    expect(manifest.timeline.map((r) => r.entitySlug)).toEqual([
+      'Country_B',
+      'Country_A',
+      'Country_C'
+    ]);
 
     // Nominated entity is present and attributed.
     const c = manifest.entities.find((e) => e.slug === 'Country_C');

@@ -9,7 +9,7 @@ export function seedMessages(question: string, today: string): LLMMessage[] {
     {
       role: 'system',
       content:
-        'You are the seeding step of a prediction engine inspired by Asimov\'s psychohistory. ' +
+        "You are the seeding step of a prediction engine inspired by Asimov's psychohistory. " +
         'Given a question or news item, identify the entities most likely to be involved in, ' +
         'or to respond to, the situation. Entities are real-world actors that plausibly have a ' +
         'Wikipedia page: countries, leaders/persons, companies, organisations, charities, ' +

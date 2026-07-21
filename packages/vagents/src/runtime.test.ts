@@ -9,9 +9,7 @@ import type { Vagent, VagentHost } from './types.js';
  */
 type Snapshot = { values: number[] };
 type Effect =
-  | { kind: 'append'; value: number }
-  | { kind: 'spawn'; id: string }
-  | { kind: 'withdraw' };
+  { kind: 'append'; value: number } | { kind: 'spawn'; id: string } | { kind: 'withdraw' };
 
 function makeHost(
   factory: (id: string) => Vagent<Snapshot, Effect>,
@@ -129,10 +127,9 @@ describe('Runtime', () => {
   });
 
   it('stops early when host.isComplete returns true', async () => {
-    const { host, bind } = makeHost(
-      (id) => ({ id, takeTurn: async () => [] }),
-      { complete: (turn) => turn === 2 }
-    );
+    const { host, bind } = makeHost((id) => ({ id, takeTurn: async () => [] }), {
+      complete: (turn) => turn === 2
+    });
     const runtime = new Runtime(host, { maxTurns: 10, maxVagents: 5, concurrency: 2 });
     bind(runtime);
     runtime.request('a');

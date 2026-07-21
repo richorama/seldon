@@ -1,0 +1,9 @@
+dist/
+node_modules/
+coverage/
+*.tsbuildinfo
+package-lock.json
+# Hand-authored documents (preserve intentional formatting)
+PLAN.md
+DESIGN.md
+README.md

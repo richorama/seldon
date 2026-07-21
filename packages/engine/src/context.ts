@@ -2,7 +2,13 @@ import type { Confidence, Entity, EntityRef, Response } from './types.js';
 
 /** The domain effect union emitted by entity vagents each turn. */
 export type SeldonEffect =
-  | { kind: 'add-response'; date: string; text: string; confidence?: Confidence; groundedOn?: string[] }
+  | {
+      kind: 'add-response';
+      date: string;
+      text: string;
+      confidence?: Confidence;
+      groundedOn?: string[];
+    }
   | { kind: 'no-response' }
   | { kind: 'withdraw' }
   | { kind: 'suggest-entities'; entities: EntityRef[] };

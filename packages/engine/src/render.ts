@@ -7,8 +7,10 @@ export function manifestToMarkdown(manifest: RunManifest): string {
   lines.push('');
   lines.push(`> **Question:** ${manifest.question}`);
   lines.push('>');
-  lines.push(`> Generated ${manifest.createdAt} · model \`${manifest.options.model}\` · ` +
-    `${manifest.turnsRun} turn(s) · stopped: ${manifest.stoppedBecause}`);
+  lines.push(
+    `> Generated ${manifest.createdAt} · model \`${manifest.options.model}\` · ` +
+      `${manifest.turnsRun} turn(s) · stopped: ${manifest.stoppedBecause}`
+  );
   lines.push('');
   lines.push(manifest.report ?? '_No report generated._');
   lines.push('');
