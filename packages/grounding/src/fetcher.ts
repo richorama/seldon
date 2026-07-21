@@ -20,8 +20,8 @@ export interface Fact {
 }
 
 /**
- * Retrieves a current summary for an entity. v1 ships a stub; real
- * implementations (Wikipedia REST, news/search) can be dropped in later.
+ * Retrieves a current summary for an entity. `WikipediaFetcher` is the default
+ * real implementation; other sources (news/search) can be dropped in later.
  */
 export interface Fetcher {
   readonly name: string;
@@ -29,8 +29,8 @@ export interface Fetcher {
 }
 
 /**
- * The v1 stub fetcher. Reports facts as unavailable so `--ground` works
- * end-to-end without committing to a data source.
+ * A fallback fetcher that reports every fact as unavailable. Used as the default
+ * when no real fetcher is wired in, so grounding is a no-op rather than an error.
  */
 export class StubFetcher implements Fetcher {
   readonly name = 'stub';

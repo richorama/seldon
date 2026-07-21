@@ -15,8 +15,9 @@ build roadmap: what we ship, in what order, and how we know each step is done.
 - **Persistence:** runs are in-memory and **ephemeral** (predictions are
   hypothetical — not worth keeping); optional `--save`. Internet-sourced **facts
   are cached to disk** because they're reusable and costly.
-- **Web grounding:** designed end-to-end now, shipped behind `--ground` with a
-  **stub fetcher** in v1; real fetcher is a later phase.
+- **Web grounding:** shipped and **on by default**, toggled via the
+  `SELDON_GROUNDING` env var. A real English-Wikipedia REST fetcher grounds each
+  entity; a `StubFetcher` is the fallback when no fetcher is wired in.
 - **Timeline:** every agent response carries a **future date**, so the shared
   context reads as a projected chronology.
 
@@ -33,79 +34,82 @@ build roadmap: what we ship, in what order, and how we know each step is done.
 ## Milestones
 
 ### M0 — Scaffold & tooling
-- [ ] Root `package.json` with npm workspaces; `tsconfig.base.json`.
-- [ ] Packages created: `vagents`, `llm`, `grounding`, `engine`, `cli`.
-- [ ] Dev tooling: `vitest`, `eslint`, `prettier`, `tsc` build; a `dev` script.
-- [ ] CI-friendly `npm test` runs green (empty suites ok).
+- [x] Root `package.json` with npm workspaces; `tsconfig.base.json`.
+- [x] Packages created: `vagents`, `llm`, `grounding`, `engine`, `cli`.
+- [x] Dev tooling: `vitest`, `eslint`, `prettier`, `tsc` build; a `dev` script.
+- [x] CI-friendly `npm test` runs green (empty suites ok).
 - **Done when:** `npm install && npm run build && npm test` succeed from a clean
   checkout.
 
 ### M1 — Generic virtual-agent runtime (`@seldon/vagents`)
-- [ ] `Vagent`, `VagentContext`, `VagentHost`, `Runtime` types/impls.
-- [ ] Turn loop with **post-barrier** effect application (all vagents see the same
+- [x] `Vagent`, `VagentContext`, `VagentHost`, `Runtime` types/impls.
+- [x] Turn loop with **post-barrier** effect application (all vagents see the same
       snapshot per turn).
-- [ ] Bounded-concurrency scheduler (p-limit style).
-- [ ] Cap enforcement (`maxTurns`, `maxVagents`) + deferred activation (spawn on
+- [x] Bounded-concurrency scheduler (p-limit style).
+- [x] Cap enforcement (`maxTurns`, `maxVagents`) + deferred activation (spawn on
       turn N activates on N+1).
-- [ ] Quiescence / empty-roster early stop via `host.isComplete`.
-- [ ] Unit tests for all of the above (no LLM).
+- [x] Quiescence / empty-roster early stop via `host.isComplete`.
+- [x] Unit tests for all of the above (no LLM).
 - **Done when:** runtime tests pass and the package has zero Seldon imports.
 
 ### M2 — LLM provider abstraction (`@seldon/llm`)
-- [ ] `LLMProvider` interface + `CompleteOptions` (incl. `json` mode).
-- [ ] `AzureOpenAIProvider` (config from env; JSON-mode support).
-- [ ] `MockProvider` with scriptable, deterministic responses.
-- [ ] Provider contract tests against fixtures.
+- [x] `LLMProvider` interface + `CompleteOptions` (incl. `json` mode).
+- [x] `AzureOpenAIProvider` (config from env; JSON-mode support).
+- [x] `MockProvider` with scriptable, deterministic responses.
+- [x] Provider contract tests against fixtures.
 - **Done when:** a smoke script completes one Azure call given real env vars, and
   Mock-based tests are green.
 
 ### M3 — Seldon engine (`@seldon/engine`) — the core loop
-- [ ] Domain model (`Entity`, `Response`, `RunManifest`) + Zod schemas.
-- [ ] `seed(question)` → initial entities (1 LLM call).
-- [ ] `EntityVagent.takeTurn` producing the effect union
+- [x] Domain model (`Entity`, `Response`, `RunManifest`) + Zod schemas.
+- [x] `seed(question)` → initial entities (1 LLM call).
+- [x] `EntityVagent.takeTurn` producing the effect union
       (`AddResponse` / `NoResponse` / `Withdraw` / `SuggestEntities`) with
       **future-dated** Markdown responses + private memory notes.
-- [ ] `EntityVagentHost`: snapshot builder (roster + timeline Markdown), effect
+- [x] `EntityVagentHost`: snapshot builder (roster + timeline Markdown), effect
       application, nominee activation under `maxAgents`, dropped-nomination log.
-- [ ] `summarise()` → Markdown forecast report.
-- [ ] Malformed-output handling: Zod validate → one retry → coerce to
+- [x] `summarise()` → Markdown forecast report.
+- [x] Malformed-output handling: Zod validate → one retry → coerce to
       `NoResponse`.
-- [ ] Full-run test using `MockProvider` exercising every effect type; assert
+- [x] Full-run test using `MockProvider` exercising every effect type; assert
       timeline sorts by date and manifest is well-formed.
 - **Done when:** an end-to-end mock run yields a sensible manifest + report with
   a correctly ordered future timeline.
 
 ### M4 — CLI (`@seldon/cli`)
-- [ ] `seldon predict "<question>"` with flags: `--turns`, `--max-agents`,
-      `--concurrency`, `--ground`, `--save`, `--seed`, `--json`, `--verbose`.
-- [ ] Default: in-memory run → print Markdown report + entity list; discard rest.
-- [ ] `--save` writes `./seldon-runs/<timestamp>/{manifest.json,report.md}`.
-- [ ] `--verbose` streams per-turn activity.
-- [ ] Clear error if Azure env vars are missing (and hint to use Mock in tests).
+- [x] `seldon predict "<question>"` with flags: `--turns`, `--max-agents`,
+      `--concurrency`, `--save`, `--seed`, `--json`, `--verbose`. Grounding is an
+      env setting (`SELDON_GROUNDING`), not a flag.
+- [x] Default: in-memory run → print Markdown report + entity list; discard rest.
+- [x] `--save` writes `./seldon-runs/<timestamp>/{manifest.json,report.md}`.
+- [x] `--verbose` streams per-turn activity.
+- [x] Clear error if Azure env vars are missing (and hint to use Mock in tests).
 - **Done when:** a real `seldon predict "..."` against Azure prints a coherent,
   dated forecast and the entity list.
 
-### M5 — Web grounding scaffold (`@seldon/grounding`)
-- [ ] `Fetcher` interface + **stub** implementation (returns `unavailable`).
-- [ ] `FactCache`: JSON metadata + Markdown body under `~/.seldon/cache/facts/`,
+### M5 — Web grounding (`@seldon/grounding`)
+- [x] `Fetcher` interface + a real **Wikipedia REST** implementation (with a
+      `StubFetcher` fallback returning `unavailable`).
+- [x] `FactCache`: JSON metadata + Markdown body under `~/.seldon/cache/facts/`,
       TTL-aware, keyed by slug.
-- [ ] `--ground` wires fact text into entity prompts and records `groundedOn`.
-- [ ] Cache round-trip + TTL tests.
-- **Done when:** `--ground` runs end-to-end using the stub, caching is exercised,
-  and swapping in a real fetcher is a single-file change.
+- [x] Grounding (default on, via `SELDON_GROUNDING`) wires fact text into entity
+      prompts and records `groundedOn`; canonical slugs deduplicate aliases.
+- [x] Cache round-trip + TTL tests.
+- **Done when:** grounding runs end-to-end against Wikipedia, caching is
+  exercised, and swapping in another fetcher is a single-file change.
 
 ### M6 — Polish & docs
-- [ ] README with quickstart, env setup, and an example run transcript.
-- [ ] Tune default caps and prompts on a handful of real questions.
-- [ ] Cost/turn note and guidance on choosing `--turns` / `--max-agents`.
+- [x] README with quickstart, env setup, and an example run transcript.
+- [x] Tune default caps and prompts on a handful of real questions.
+- [x] Cost/turn note and guidance on choosing `--turns` / `--max-agents`.
 - **Done when:** a newcomer can go from clone to a forecast in a few minutes.
 
 ---
 
 ## Backlog / future phases
 
-- **Real web grounding:** Wikipedia REST extract fetcher; then news/search for
-  recency; per-source confidence weighting.
+- **News/search grounding:** Wikipedia extract grounding has shipped; add
+  news/search sources for recency and per-source confidence weighting.
 - **Entra ID auth** for Azure OpenAI (`DefaultAzureCredential`) instead of keys.
 - **Web app:** the "future" mentioned in the brief — an API + UI to launch runs
   and watch the timeline assemble live (SSE/streaming per turn).
@@ -123,7 +127,9 @@ build roadmap: what we ship, in what order, and how we know each step is done.
 - Exact default caps (`--turns 4`, `--max-agents 12`) — tune empirically in M6.
 - Should agents ever *reactivate* after withdrawing if strongly implicated again?
   (Deferred; keep withdrawal terminal in v1.)
-- How aggressively to canonicalise/validate Wikipedia slugs before grounding.
+- ~~How aggressively to canonicalise/validate Wikipedia slugs before grounding.~~
+  Resolved: grounded slugs are canonicalised via Wikipedia redirects and
+  deduplicated by canonical slug.
 
 ---
 

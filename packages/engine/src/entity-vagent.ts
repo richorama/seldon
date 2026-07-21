@@ -9,7 +9,7 @@ export interface EntityVagentDeps {
   entity: Entity;
   provider: LLMProvider;
   today: string;
-  /** Grounding text for this entity, when --ground supplied a fact. */
+  /** Grounding text for this entity, when grounding supplied a fact. */
   factText?: string;
   /** Cache keys this entity's responses were grounded on. */
   groundedOn?: string[];

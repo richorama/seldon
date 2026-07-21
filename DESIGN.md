@@ -302,37 +302,45 @@ export interface LLMProvider {
 }
 ```
 
-**`AzureOpenAIProvider`** wraps the `openai` SDK configured for Azure. Config via
-environment (12-factor):
+**`AzureOpenAIProvider`** wraps the `openai` SDK targeting Azure's **v1 API**
+(`<host>/openai/v1/`), so both classic `*.openai.azure.com` and newer
+`*.services.ai.azure.com` (AI Foundry) endpoints work; a full endpoint path is
+normalised automatically. For reasoning models that reject a non-default
+`temperature`, the provider detects the rejection and retries without it. Config
+via environment (12-factor):
 
 | Env var                     | Purpose                                  |
 |-----------------------------|------------------------------------------|
-| `AZURE_OPENAI_ENDPOINT`     | `https://<resource>.openai.azure.com`    |
-| `AZURE_OPENAI_API_KEY`      | key (or use Entra ID / `DefaultAzureCredential` later) |
+| `AZURE_OPENAI_ENDPOINT`     | `https://<resource>.services.ai.azure.com` or `*.openai.azure.com` |
+| `AZURE_OPENAI_API_KEY`      | key — `AZURE_OPENAI_KEY` also accepted (or Entra ID later) |
 | `AZURE_OPENAI_DEPLOYMENT`   | deployment/model name                    |
-| `AZURE_OPENAI_API_VERSION`  | e.g. `2024-10-21`                        |
+| `AZURE_OPENAI_API_VERSION`  | optional, e.g. `2024-10-21`              |
 
 A **`MockProvider`** returns deterministic canned effects so the engine and
 runtime can be tested without network or spend.
 
 ---
 
-## 6. Web grounding — `@seldon/grounding` (designed now, stubbed in v1)
+## 6. Web grounding — `@seldon/grounding`
 
 Enabled by default; controlled via the `SELDON_GROUNDING` env var (set to
 `false`/`0`/`off`/`no` to disable). Two pieces:
 
 - **`Fetcher`** — `fetch(slug): Promise<Fact>` retrieves a current summary for an
-  entity (Wikipedia extract in v1; pluggable to news/search later). **v1 ships a
-  stub** that returns `{ status: 'unavailable' }` unless a real fetcher is wired
-  in, so the flag exists end-to-end without committing to a data source.
+  entity. `WikipediaFetcher` (English Wikipedia REST summary) is the default
+  real implementation; a `StubFetcher` that returns `{ status: 'unavailable' }`
+  is the fallback used when no fetcher is wired in. The interface is pluggable to
+  news/search sources later. A `Fact` also carries a `canonicalSlug` (the
+  redirect-resolved Wikipedia slug), which the engine uses to **deduplicate**
+  entities nominated under different aliases.
 - **`FactCache`** — persistent on-disk cache (predictions aren't kept, but facts
   are). Layout under `~/.seldon/cache/facts/`:
-  - `<slug>.json` — `{ slug, fetchedAt, source, url, ttlDays }`
+  - `<slug>.json` — `{ slug, status, source, url, canonicalSlug, fetchedAt }`
   - `<slug>.md`   — the human-readable fact text (Markdown)
 
-  Lookups honour a TTL; stale entries are refetched. Cache is keyed by slug so
-  re-runs and different questions share grounding.
+  Lookups honour a TTL (a cache-level option); stale entries are refetched. The
+  cache is keyed by slug so re-runs and different questions share grounding.
+  Entries cached before `canonicalSlug` existed are backfilled from the page URL.
 
 When grounded, an entity-vagent's prompt includes its cached fact text, and any
 `Response` records the cache keys it drew on in `groundedOn`.
@@ -412,6 +420,7 @@ Runner: `vitest`. Lint/format: `eslint` + `prettier`. Types: `tsc --noEmit`.
 | Risk | Mitigation |
 |------|------------|
 | Runaway entity growth | Hard `maxVagents`; nominations past the cap are dropped and reported. |
+| Duplicate entities under alias slugs | When grounded, slugs are canonicalised via Wikipedia redirects and deduplicated by canonical slug. |
 | Runaway token spend | `maxTurns` cap; bounded concurrency; quiescence early-stop. |
 | Echo-chamber / everyone agrees | Prompt agents to stay in character and surface genuine conflicts; summariser explicitly reports branch points. |
 | Hallucinated Wikipedia slugs | Seeder/nominator instructed to use canonical slugs; optional grounding validates existence; invalid slugs flagged. |
