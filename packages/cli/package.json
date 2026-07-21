@@ -1,0 +1,19 @@
+{
+  "name": "@seldon/cli",
+  "version": "0.1.0",
+  "description": "Command-line interface for Seldon, the LLM prediction machine.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "seldon": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@seldon/engine": "0.1.0",
+    "@seldon/llm": "0.1.0",
+    "@seldon/grounding": "0.1.0"
+  }
+}
