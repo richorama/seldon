@@ -123,10 +123,13 @@ degrade gracefully to "unavailable" for that entity (fail-open) — the run
 continues. When grounding is on, entities whose Wikipedia page genuinely does
 **not exist** (HTTP 404) are treated as likely fabricated slugs and are
 **rejected** rather than allowed to deliberate; they are listed under
-`rejectedEntities` in the manifest. Facts persist under
-`~/.seldon/cache/facts/` as a JSON metadata file plus a Markdown body per slug,
-honouring a TTL, so re-runs reuse them (transient errors are not cached, so they
-retry).
+`rejectedEntities` in the manifest. Before rejecting, the fetcher first tries to
+**resolve** an imperfect slug to a real title via Wikipedia search (guarded by a
+title match), so a real actor nominated under the wrong slug (e.g.
+`Anthropic_(company)` → `Anthropic`) is still grounded and admitted. Facts persist
+under `~/.seldon/cache/facts/` as a JSON metadata file plus a Markdown body per
+slug, honouring a TTL, so re-runs reuse them (transient errors are not cached, so
+they retry).
 
 The fetcher sits behind a `Fetcher` interface, so swapping in additional sources
 (news, search) is a single-file change. Responses record which fact-cache keys

@@ -9,6 +9,14 @@ export interface WikipediaFetcherOptions {
   userAgent?: string;
   /** Injectable fetch for testing. Defaults to global fetch. */
   fetchImpl?: typeof fetch;
+  /**
+   * When a slug has no summary page (404), try to resolve it to a real title via
+   * Wikipedia search before giving up (recovers real actors nominated under an
+   * imperfect slug, e.g. "Anthropic_(company)" -> "Anthropic"). Defaults to true.
+   */
+  resolveTitles?: boolean;
+  /** How many search candidates to consider when resolving a slug. Defaults to 5. */
+  searchLimit?: number;
 }
 
 interface WikiSummary {
@@ -20,11 +28,17 @@ interface WikiSummary {
   content_urls?: { desktop?: { page?: string } };
 }
 
+interface SearchResponse {
+  pages?: { key?: string; title?: string }[];
+}
+
 /**
  * Grounds an entity from its English Wikipedia summary via the REST API
  * (`/api/rest_v1/page/summary/<slug>`). Returns Markdown text; reports
  * `unavailable` for missing pages, network errors or timeouts so a run can
- * proceed without grounding for that entity.
+ * proceed without grounding for that entity. When a slug 404s, it first attempts
+ * to resolve it to a real title via Wikipedia search (guarded by a title match)
+ * so real actors nominated under an imperfect slug are still grounded.
  */
 export class WikipediaFetcher implements Fetcher {
   readonly name = 'wikipedia';
@@ -32,26 +46,44 @@ export class WikipediaFetcher implements Fetcher {
   private readonly timeoutMs: number;
   private readonly userAgent: string;
   private readonly fetchImpl: typeof fetch;
+  private readonly resolveTitles: boolean;
+  private readonly searchLimit: number;
 
   constructor(options: WikipediaFetcherOptions = {}) {
     this.lang = options.lang ?? 'en';
     this.timeoutMs = options.timeoutMs ?? 8000;
     this.userAgent = options.userAgent ?? 'seldon/0.1 (https://github.com/richorama/seldon)';
     this.fetchImpl = options.fetchImpl ?? fetch;
+    this.resolveTitles = options.resolveTitles ?? true;
+    this.searchLimit = options.searchLimit ?? 5;
   }
 
   async fetch(slug: string): Promise<Fact> {
+    const primary = await this.fetchSummary(slug);
+    if (primary.status === 'ok') return primary;
+    // Only try to resolve genuine 404s; transient errors fail open and retry.
+    if (primary.reason !== 'not-found' || !this.resolveTitles) return primary;
+
+    const resolved = await this.resolveSlug(slug);
+    if (resolved && resolved !== slug) {
+      const alt = await this.fetchSummary(resolved);
+      if (alt.status === 'ok') {
+        // Keep the requested slug as the cache key; expose the resolved page as
+        // the canonical slug so the engine dedups/admits under the real actor.
+        return { ...alt, slug, canonicalSlug: alt.canonicalSlug ?? resolved };
+      }
+    }
+    return primary;
+  }
+
+  /** Fetch the REST summary for exactly this slug (no resolution). */
+  private async fetchSummary(slug: string): Promise<Fact> {
     const url =
       `https://${this.lang}.wikipedia.org/api/rest_v1/page/summary/` +
       `${encodeURIComponent(slug)}?redirect=true`;
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
-      const res = await this.fetchImpl(url, {
-        headers: { accept: 'application/json', 'user-agent': this.userAgent },
-        signal: controller.signal
-      });
+      const res = await this.request(url);
       if (!res.ok) {
         // 404 means the page genuinely does not exist (likely a hallucinated
         // slug); any other status is a transient/server error (fail open).
@@ -73,6 +105,61 @@ export class WikipediaFetcher implements Fetcher {
       };
     } catch {
       return this.unavailable(slug, 'error');
+    }
+  }
+
+  /**
+   * Resolve a slug with no summary page to a real page key via full-text search.
+   * Returns the key of the best candidate whose title plausibly matches the
+   * query, or null when nothing matches (guards against admitting an unrelated
+   * page for a genuinely fabricated slug).
+   */
+  private async resolveSlug(slug: string): Promise<string | null> {
+    const query = slug.replace(/_/g, ' ');
+    const url =
+      `https://${this.lang}.wikipedia.org/w/rest.php/v1/search/page?` +
+      `q=${encodeURIComponent(query)}&limit=${this.searchLimit}`;
+    try {
+      const res = await this.request(url);
+      if (!res.ok) return null;
+      const data = (await res.json()) as SearchResponse;
+      for (const page of data.pages ?? []) {
+        if (page.key && page.title && this.titlesMatch(query, page.title)) {
+          return page.key;
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Whether a search-result title plausibly refers to the queried slug. Compares
+   * alphanumeric-only, lower-cased forms (ignoring parenthetical qualifiers) and
+   * accepts an exact match or one being contained in the other.
+   */
+  private titlesMatch(query: string, title: string): boolean {
+    const norm = (s: string): string =>
+      s
+        .toLowerCase()
+        .replace(/\([^)]*\)/g, '')
+        .replace(/[^a-z0-9]/g, '');
+    const q = norm(query);
+    const t = norm(title);
+    if (!q || !t) return false;
+    return q === t || q.includes(t) || t.includes(q);
+  }
+
+  /** Issue a GET with the standard headers and a per-request timeout. */
+  private async request(url: string): Promise<Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      return await this.fetchImpl(url, {
+        headers: { accept: 'application/json', 'user-agent': this.userAgent },
+        signal: controller.signal
+      });
     } finally {
       clearTimeout(timer);
     }

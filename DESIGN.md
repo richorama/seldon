@@ -335,7 +335,13 @@ Enabled by default; controlled via the `SELDON_GROUNDING` env var (set to
 entities nominated under different aliases. An unavailable `Fact` carries a
 `reason`: `'not-found'` (HTTP 404 — the page genuinely does not exist, so the
 entity is likely a hallucinated slug) or `'error'` (transient network/timeout/
-non-404 failure, treated fail-open).
+non-404 failure, treated fail-open). Before returning `not-found`, the fetcher
+tries to **resolve** the slug to a real title via Wikipedia full-text search,
+guarded by a title match (alphanumeric, case-insensitive, ignoring parenthetical
+qualifiers). This recovers real actors nominated under an imperfect slug (e.g.
+`Anthropic_(company)` → `Anthropic`) while a genuinely fabricated slug, whose
+search hits don't match, still resolves to `not-found`. The requested slug stays
+the cache key; the resolved page becomes the `canonicalSlug`.
 - **`FactCache`** — persistent on-disk cache (predictions aren't kept, but facts
 are). Layout under `~/.seldon/cache/facts/`:
 - `<slug>.json` — `{ slug, status, reason?, source, url, canonicalSlug, fetchedAt }`

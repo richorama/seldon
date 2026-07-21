@@ -97,7 +97,9 @@ build roadmap: what we ship, in what order, and how we know each step is done.
 - [x] **Grounding gate:** reject entities whose Wikipedia page 404s (likely
       fabricated slugs), fail-open on transient errors; surface `rejectedEntities`
       in the manifest. `Fact.reason` distinguishes `not-found` vs `error`;
-      transient errors are not cached.
+      transient errors are not cached. A search-based **slug resolver** recovers
+      real actors nominated under an imperfect slug (e.g. `Anthropic_(company)` →
+      `Anthropic`) before rejecting, guarded by a title match.
 - [x] Cache round-trip + TTL tests.
 - **Done when:** grounding runs end-to-end against Wikipedia, caching is
   exercised, and swapping in another fetcher is a single-file change.
