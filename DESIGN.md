@@ -358,16 +358,30 @@ When grounded, an entity-vagent's prompt includes its cached fact text, and any
 
 ---
 
-## 6a. Red-team vagent — the skeptic
+## 6a. Panel vagents — skeptic & visionary
 
-Enabled by default (`SELDON_SKEPTIC`, `false`/`0`/`off`/`no` to disable), the
-`SkepticVagent` ("Devil's Advocate") is a built-in adversarial vagent that
-represents no real-world entity. It is active from turn 1 and each turn may add a
-dated counter-scenario/challenge to the shared timeline, so other vagents react
-to dissent instead of converging on false consensus. It never withdraws, does not
-nominate entities, and is exempt from grounding. It joins the roster with an empty
-`wikipediaUrl` (rendered without a hyperlink) and is given its own runtime slot
-(`maxVagents + 1`) so it never displaces a real entity under the cap.
+Alongside the entity vagents, Seldon runs built-in **panel vagents** that
+represent no real-world entity but shape the deliberation. They share a
+`PanelVagent` base (one structured LLM call per turn that may add a single dated
+response); each is active from turn 1, exempt from grounding, never withdraws or
+nominates, joins the roster with an empty `wikipediaUrl` (rendered without a
+hyperlink), and is given its own runtime slot (`maxVagents + <count of enabled
+panelists>`) so it never displaces a real entity under the cap.
+
+- **`SkepticVagent`** ("Devil's Advocate", `SELDON_SKEPTIC`, default on) — an
+  adversarial red team: each turn it may add a dated counter-scenario/challenge so
+  other vagents react to dissent instead of converging on false consensus.
+- **`VisionaryVagent`** ("Visionary", `SELDON_VISIONARY`, default on) — a
+  "think big" red team: it counters incremental thinking by injecting the
+  largest-scale, highest-stakes, longest-horizon consequences (bold strategic
+  moves, systemic/second-order effects, how the situation could reshape an
+  industry or geopolitical order).
+
+The seed/turn/summary prompts are tuned to keep the forecast on **real-world
+implications** (strategic, competitive, commercial, political, societal) in plain
+language for a general reader, rather than technical/process minutiae; the summary
+leads with reader-facing sections (implications, winners & losers, how the key
+players respond, bigger-picture scenarios, what to watch).
 
 ---
 
@@ -391,9 +405,9 @@ Default behaviour: run in memory, print the Markdown report and the entity list
 to stdout, discard everything else. `--save` writes
 `./seldon-runs/<timestamp>/manifest.json` + `report.md` for the curious.
 
-Settings such as `SELDON_GROUNDING` (grounding on/off), `SELDON_SKEPTIC`
-(red-team vagent on/off) and the Azure OpenAI credentials are read from the
-environment or a `.env` file, not from flags.
+Settings such as `SELDON_GROUNDING` (grounding on/off), `SELDON_SKEPTIC` /
+`SELDON_VISIONARY` (panel vagents on/off) and the Azure OpenAI credentials are
+read from the environment or a `.env` file, not from flags.
 
 Example:
 

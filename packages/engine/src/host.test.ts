@@ -154,12 +154,26 @@ describe('EntityVagentHost admission', () => {
     const { runtime, requested } = fakeRuntime();
     host.bind(runtime);
 
-    host.registerSkeptic();
+    host.registerPanelists();
     expect(requested).toContain('seldon-skeptic');
     const skeptic = context.entityList().find((e) => e.slug === 'seldon-skeptic');
     expect(skeptic?.wikipediaUrl).toBe('');
 
     const vagent = await host.activate('seldon-skeptic');
     expect(vagent.id).toBe('seldon-skeptic');
+  });
+
+  it('registers and activates the visionary when enabled', async () => {
+    const context = new SharedContext('Q?');
+    const host = new EntityVagentHost({ context, provider, today: '2025-01-01', visionary: true });
+    const { runtime, requested } = fakeRuntime();
+    host.bind(runtime);
+
+    host.registerPanelists();
+    expect(requested).toContain('seldon-visionary');
+    expect(context.entityList().find((e) => e.slug === 'seldon-visionary')?.wikipediaUrl).toBe('');
+
+    const vagent = await host.activate('seldon-visionary');
+    expect(vagent.id).toBe('seldon-visionary');
   });
 });

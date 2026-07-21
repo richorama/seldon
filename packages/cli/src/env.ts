@@ -35,3 +35,14 @@ export function skepticEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
   if (raw === undefined || raw.trim() === '') return true;
   return !/^(false|0|off|no)$/i.test(raw.trim());
 }
+
+/**
+ * Whether the built-in "think big" Visionary vagent is enabled, read from the
+ * SELDON_VISIONARY env var. On by default; set SELDON_VISIONARY to a falsy value
+ * (false/0/off/no) to disable it.
+ */
+export function visionaryEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  const raw = env.SELDON_VISIONARY;
+  if (raw === undefined || raw.trim() === '') return true;
+  return !/^(false|0|off|no)$/i.test(raw.trim());
+}

@@ -5,6 +5,7 @@ import type { Fact, GroundingService } from '@seldon/grounding';
 import { SharedContext, type SeldonEffect, type SeldonSnapshot } from './context.js';
 import { EntityVagent } from './entity-vagent.js';
 import { SkepticVagent, SKEPTIC_ID, SKEPTIC_NAME } from './skeptic-vagent.js';
+import { VisionaryVagent, VISIONARY_ID, VISIONARY_NAME } from './visionary-vagent.js';
 import { wikipediaUrl, type EntityRef, type EntityType } from './types.js';
 
 export interface EntityVagentHostDeps {
@@ -14,6 +15,8 @@ export interface EntityVagentHostDeps {
   grounding?: GroundingService;
   /** Include the built-in red-team skeptic vagent. */
   skeptic?: boolean;
+  /** Include the built-in "think big" visionary vagent. */
+  visionary?: boolean;
   /** Optional per-turn hook, invoked after effects are applied. */
   onTurn?: (turn: number, responsesAdded: number, totalEntities: number) => void;
 }
@@ -51,15 +54,21 @@ export class EntityVagentHost implements VagentHost<SeldonSnapshot, SeldonEffect
   }
 
   /**
-   * Register the built-in red-team vagent so it is active from turn 1. It joins
-   * the roster as a non-Wikipedia entity and is exempt from grounding.
+   * Register the enabled built-in panel vagents (skeptic and/or visionary) so
+   * they are active from turn 1. Each joins the roster as a non-Wikipedia entity
+   * and is exempt from grounding.
    */
-  registerSkeptic(): void {
+  registerPanelists(): void {
+    if (this.deps.skeptic) this.registerPanelist(SKEPTIC_ID, SKEPTIC_NAME);
+    if (this.deps.visionary) this.registerPanelist(VISIONARY_ID, VISIONARY_NAME);
+  }
+
+  private registerPanelist(id: string, name: string): void {
     const runtime = this.requireRuntime();
-    if (!runtime.request(SKEPTIC_ID)) return;
+    if (!runtime.request(id)) return;
     this.deps.context.addEntity({
-      slug: SKEPTIC_ID,
-      name: SKEPTIC_NAME,
+      slug: id,
+      name,
       type: 'other',
       wikipediaUrl: '',
       status: 'active',
@@ -85,6 +94,9 @@ export class EntityVagentHost implements VagentHost<SeldonSnapshot, SeldonEffect
   async activate(id: string): Promise<Vagent<SeldonSnapshot, SeldonEffect>> {
     if (id === SKEPTIC_ID) {
       return new SkepticVagent({ provider: this.deps.provider, today: this.deps.today });
+    }
+    if (id === VISIONARY_ID) {
+      return new VisionaryVagent({ provider: this.deps.provider, today: this.deps.today });
     }
     const admitted = this.admitted.get(id);
     const entity = this.deps.context.getEntity(id);

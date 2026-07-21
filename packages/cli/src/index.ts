@@ -11,7 +11,7 @@ import {
   type RunOptions
 } from '@seldon/engine';
 import { parseArgs, HELP } from './args.js';
-import { loadDotenv, groundingEnabled, skepticEnabled } from './env.js';
+import { loadDotenv, groundingEnabled, skepticEnabled, visionaryEnabled } from './env.js';
 
 async function main(rawArgv: string[]): Promise<number> {
   loadDotenv();
@@ -46,12 +46,14 @@ async function main(rawArgv: string[]): Promise<number> {
 
   const grounded = groundingEnabled();
   const skeptic = skepticEnabled();
+  const visionary = visionaryEnabled();
   const options: RunOptions = {
     maxTurns: args.turns,
     maxVagents: args.maxAgents,
     concurrency: args.concurrency,
     grounded,
     skeptic,
+    visionary,
     model: process.env.AZURE_OPENAI_DEPLOYMENT ?? 'azure-openai'
   };
 

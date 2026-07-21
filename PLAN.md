@@ -102,15 +102,22 @@ build roadmap: what we ship, in what order, and how we know each step is done.
 - **Done when:** grounding runs end-to-end against Wikipedia, caching is
   exercised, and swapping in another fetcher is a single-file change.
 
-### M5a — Quality: anti-fabrication & red-team
+### M5a — Quality: real-world framing, anti-fabrication & panel vagents
 - [x] Prompt hardening across seed/turn/summary prompts against invented
       programmes, acronyms, figures and exact dates.
+- [x] **Real-world framing:** seed/turn/summary prompts steer toward strategic,
+      competitive, commercial, political and societal implications in plain
+      language; the summary leads with reader-facing sections (implications,
+      winners & losers, how key players respond, bigger-picture, what to watch).
 - [x] Built-in **red-team `SkepticVagent`** ("Devil's Advocate", `SELDON_SKEPTIC`,
       default on): active from turn 1, injects dated counter-scenarios, exempt
       from grounding, gets its own cap slot, no Wikipedia link.
-- [x] Tests for gate, skeptic participation, reason plumbing, and env toggles.
-- **Done when:** hallucinated entities are dropped, dissent appears in the
-  timeline, and the summary carries a red-team section.
+- [x] Built-in **think-big `VisionaryVagent`** ("Visionary", `SELDON_VISIONARY`,
+      default on): pushes for the largest-scale, longest-horizon consequences;
+      shares a `PanelVagent` base with the skeptic; own cap slot.
+- [x] Tests for gate, panelist participation, reason plumbing, and env toggles.
+- **Done when:** hallucinated entities are dropped, dissent and big-picture
+  scenarios appear in the timeline, and the summary reads for a general audience.
 
 ### M6 — Polish & docs
 - [x] README with quickstart, env setup, and an example run transcript.

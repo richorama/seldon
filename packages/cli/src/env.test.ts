@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { groundingEnabled, skepticEnabled } from './env.js';
+import { groundingEnabled, skepticEnabled, visionaryEnabled } from './env.js';
 
 describe('groundingEnabled', () => {
   it('defaults to enabled when unset or blank', () => {
@@ -30,6 +30,19 @@ describe('skepticEnabled', () => {
   it('disables on falsy values (case-insensitive)', () => {
     for (const v of ['false', '0', 'off', 'no', 'FALSE']) {
       expect(skepticEnabled({ SELDON_SKEPTIC: v })).toBe(false);
+    }
+  });
+});
+
+describe('visionaryEnabled', () => {
+  it('defaults to enabled when unset or blank', () => {
+    expect(visionaryEnabled({})).toBe(true);
+    expect(visionaryEnabled({ SELDON_VISIONARY: '' })).toBe(true);
+  });
+
+  it('disables on falsy values (case-insensitive)', () => {
+    for (const v of ['false', '0', 'off', 'no', 'FALSE']) {
+      expect(visionaryEnabled({ SELDON_VISIONARY: v })).toBe(false);
     }
   });
 });

@@ -64,7 +64,8 @@ Optional Seldon settings (also read from the environment / `.env`):
 
 ```bash
 export SELDON_GROUNDING="true"   # Wikipedia grounding, on by default; false/0/off/no to disable
-export SELDON_SKEPTIC="true"     # built-in red-team vagent, on by default; false/0/off/no to disable
+export SELDON_SKEPTIC="true"      # red-team "Devil's Advocate" vagent, on by default; false/0/off/no to disable
+export SELDON_VISIONARY="true"    # "think big" visionary vagent, on by default; false/0/off/no to disable
 ```
 
 The provider targets Azure's **v1 API** (`<host>/openai/v1/`), so both classic
@@ -131,15 +132,26 @@ The fetcher sits behind a `Fetcher` interface, so swapping in additional sources
 (news, search) is a single-file change. Responses record which fact-cache keys
 they were grounded on (`groundedOn`).
 
-## Red-team vagent (`SELDON_SKEPTIC`)
+## Panel vagents (`SELDON_SKEPTIC`, `SELDON_VISIONARY`)
 
-On by default, Seldon adds a built-in **"Devil's Advocate"** vagent that plays no
-real-world entity. Instead it stress-tests the emerging consensus each turn —
-challenging over-confident claims, surfacing unstated assumptions, and injecting
-the strongest realistic counter-scenario as a dated timeline entry the other
-vagents then react to. It never withdraws, does not nominate entities, is exempt
-from grounding, and occupies its own slot so it never displaces a real entity
-under `--max-agents`. Disable it with `SELDON_SKEPTIC=false`.
+Alongside the entities, Seldon adds two built-in "panel" vagents that play no
+real-world entity but shape the deliberation. Both are on by default, active from
+turn 1, exempt from grounding, never withdraw or nominate, and each occupies its
+own slot so it never displaces a real entity under `--max-agents`.
+
+- **Devil's Advocate (red team)** — stress-tests the emerging consensus:
+  challenges over-confident claims, exposes unstated assumptions, and injects the
+  strongest realistic counter-scenario as a dated timeline entry. Disable with
+  `SELDON_SKEPTIC=false`.
+- **Visionary (think big)** — counters small, incremental thinking: pushes the
+  panel toward the largest-scale, highest-stakes and longest-horizon consequences
+  — bold strategic moves, second-order and systemic effects, and how the
+  situation could reshape an industry, market or geopolitical order. Disable with
+  `SELDON_VISIONARY=false`.
+
+Prompts are tuned to keep the forecast focused on **real-world implications**
+(strategic, competitive, commercial, political and societal consequences) in
+plain language for a general reader, rather than technical/process minutiae.
 
 ## Development
 

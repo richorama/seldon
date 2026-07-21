@@ -45,18 +45,20 @@ export async function predict(params: PredictParams): Promise<RunManifest> {
     today,
     grounding,
     skeptic: options.skeptic,
+    visionary: options.visionary,
     onTurn: (turn, responses, entities) =>
       onEvent?.({ type: 'turn-complete', turn, responses, entities })
   });
+  const panelists = (options.skeptic ? 1 : 0) + (options.visionary ? 1 : 0);
   const runtime = new Runtime<SeldonSnapshot, SeldonEffect>(host, {
     maxTurns: options.maxTurns,
-    // The skeptic occupies its own slot so it never displaces a real entity.
-    maxVagents: options.maxVagents + (options.skeptic ? 1 : 0),
+    // Built-in panelists get their own slots so they never displace real entities.
+    maxVagents: options.maxVagents + panelists,
     concurrency: options.concurrency
   });
   host.bind(runtime);
 
-  if (options.skeptic) host.registerSkeptic();
+  host.registerPanelists();
 
   const seedEntities = params.seedSlugs?.length
     ? seedFromSlugs(params.seedSlugs)

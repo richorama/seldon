@@ -10,6 +10,7 @@ const OPTIONS: RunOptions = {
   concurrency: 2,
   grounded: false,
   skeptic: false,
+  visionary: false,
   model: 'mock'
 };
 
@@ -187,6 +188,31 @@ describe('predict (full mock run)', () => {
     expect(manifest.timeline.some((r) => r.entitySlug === 'seldon-skeptic')).toBe(true);
     // Skeptic renders without a hyperlink.
     expect(manifestToMarkdown(manifest)).toContain("**Devil's Advocate (red team)**");
+  });
+
+  it('includes the visionary (think-big) panelist when enabled', async () => {
+    const provider = new MockProvider((messages) => {
+      if (isSeed(messages)) {
+        return JSON.stringify({ entities: [{ slug: 'Root', name: 'Root', type: 'organisation' }] });
+      }
+      if (isSummary(messages)) return 'ok';
+      const joined = messages.map((x) => x.content).join('\n');
+      if (joined.includes('Visionary')) {
+        return JSON.stringify({
+          response: { date: '2030-01-01', text: 'This reshapes the whole industry.' }
+        });
+      }
+      return JSON.stringify({ response: null });
+    });
+    const manifest = await predict({
+      question: 'q',
+      provider,
+      options: { ...OPTIONS, maxVagents: 1, visionary: true }
+    });
+    const visionary = manifest.entities.find((e) => e.slug === 'seldon-visionary');
+    expect(visionary).toBeDefined();
+    expect(visionary?.wikipediaUrl).toBe('');
+    expect(manifest.timeline.some((r) => r.entitySlug === 'seldon-visionary')).toBe(true);
   });
 
   it('surfaces grounding-rejected (fabricated) entities in the manifest', async () => {

@@ -19,6 +19,9 @@ export function seedMessages(question: string, today: string): LLMMessage[] {
         'Wikipedia page. Do NOT invent organisations, programmes, coalitions or people. If ' +
         'the real protagonist is a specific company or person (not just an abstract project ' +
         'or product), name that actor rather than a made-up entity around it.\n' +
+        'Favour the actors who actually decide how this plays out and who bear its ' +
+        'consequences — the key decision-makers, their backers and rivals, the regulators, ' +
+        'and the countries/markets/communities most affected — over peripheral commentators.\n' +
         `Today is ${today}. Reason about who matters for what comes next.`
     },
     {
@@ -65,6 +68,12 @@ export function entityTurnMessages(params: {
         'further role to play in this scenario at all, withdraw so resources go elsewhere.\n' +
         `Today is ${today}. When you add a response, describe a concrete projected action or ` +
         'statement and assign it a realistic FUTURE date (after today).\n' +
+        'Focus on real-world implications a general reader cares about — strategic, ' +
+        'competitive, commercial, political, geopolitical and societal consequences: what you ' +
+        'DO in response, how it affects your position, rivals, customers, prices, jobs, ' +
+        'alliances, regulation or national interest, and who wins or loses. Avoid deep ' +
+        'technical, procedural or engineering minutiae unless it is genuinely the decisive ' +
+        'lever, and explain it in plain terms. Write for a smart non-specialist, not an expert.\n' +
         'Do NOT fabricate specifics. Do not invent named programmes, initiatives, acronyms, ' +
         'bills, documents, figures or exact dates that are not established fact or given in ' +
         'your grounding/the timeline. Describe plausible mechanisms in general terms and frame ' +
@@ -107,11 +116,14 @@ export function summaryMessages(params: {
       content:
         'You are the summarisation step of a psychohistory-style prediction engine. You are ' +
         'given the entities that deliberated and the projected timeline they produced. Write ' +
-        'a clear, reasoned forecast in Markdown. Be explicit that this is hypothetical ' +
-        'reasoning, not certainty. Do not introduce specific named programmes, figures or ' +
-        'dates that are not present in the timeline you were given; do not manufacture false ' +
-        'precision. Where the deliberation surfaced disagreement or red-team challenges, ' +
-        'represent that dissent faithfully rather than smoothing it into false consensus.\n' +
+        'a clear, reasoned forecast in Markdown for a smart general reader — lead with the ' +
+        'real-world story and its implications (strategic, competitive, commercial, political, ' +
+        'geopolitical and societal), not technical process detail. Be explicit that this is ' +
+        'hypothetical reasoning, not certainty. Do not introduce specific named programmes, ' +
+        'figures or dates that are not present in the timeline you were given; do not ' +
+        'manufacture false precision. Where the deliberation surfaced disagreement, red-team ' +
+        'challenges or bigger-picture scenarios, represent them faithfully rather than ' +
+        'smoothing them into false consensus.\n' +
         `Today is ${today}.`
     },
     {
@@ -121,10 +133,13 @@ export function summaryMessages(params: {
         `Entities involved:\n${rosterMarkdown}\n\n` +
         `Projected timeline:\n${timelineMarkdown}\n\n` +
         'Write the forecast as Markdown with these sections:\n' +
-        '## Executive forecast\n## Projected timeline\n## Key actors & stances\n' +
+        '## Executive forecast\n## What it means (real-world implications)\n' +
+        '## Winners & losers\n## How the key players respond\n' +
+        '## Projected timeline\n## Bigger picture & long-horizon scenarios\n' +
         '## Dissent & red-team challenges\n## Uncertainties & branch points\n' +
-        '## Confidence & caveats\n' +
-        'Return only the Markdown report.'
+        '## What to watch\n## Confidence & caveats\n' +
+        'Keep the language accessible and concrete about consequences. Return only the ' +
+        'Markdown report.'
     }
   ];
 }
@@ -169,6 +184,52 @@ export function skepticTurnMessages(params: {
         '  "response": {"date":"YYYY-MM-DD","text":"markdown challenge/counter-scenario","confidence":"low|medium|high"} or null\n' +
         '}\n' +
         'Set "response" to null if you have no sharper challenge to add this turn.'
+    }
+  ];
+}
+
+export function visionaryTurnMessages(params: {
+  snapshot: SeldonSnapshot;
+  memory: readonly string[];
+  today: string;
+}): LLMMessage[] {
+  const { snapshot, memory, today } = params;
+  const memoryBlock = memory.length
+    ? `\nYour private notes so far:\n${memory.map((m) => `- ${m}`).join('\n')}\n`
+    : '';
+
+  return [
+    {
+      role: 'system',
+      content:
+        'You are the "Visionary" (a think-big red team) inside a multi-agent prediction ' +
+        'simulation. You do NOT represent any real-world entity. Your job is to counter ' +
+        'small, incremental thinking: push the deliberation to consider the largest-scale, ' +
+        'highest-stakes and longest-horizon consequences the other agents are underweighting ' +
+        '— bold strategic moves, second-order and systemic effects, and how this could ' +
+        'reshape an industry, market, technology or geopolitical order over the coming years.\n' +
+        'Contribute ONLY when you can add a genuinely bigger-picture scenario or implication ' +
+        'not already reflected in the timeline. Stay plausible and grounded in real incentives ' +
+        '— be ambitious, not fantastical — and do not fabricate specific named programmes, ' +
+        'figures or dates. Frame your point as a dated projected development (a FUTURE date ' +
+        'after today, and you may look several years out). If the timeline already thinks big ' +
+        'enough and you have nothing to add, stay silent (null response). You never withdraw ' +
+        'and you do not nominate entities.\n' +
+        `Today is ${today}.`
+    },
+    {
+      role: 'user',
+      content:
+        `The situation:\n"""${snapshot.question}"""\n\n` +
+        `Current entities (turn ${snapshot.turn}):\n${snapshot.rosterMarkdown}\n\n` +
+        `Projected timeline so far:\n${snapshot.timelineMarkdown}\n` +
+        memoryBlock +
+        '\nDecide your big-picture contribution THIS turn. Return ONLY a JSON object:\n' +
+        '{\n' +
+        '  "memoryNote": "optional private reasoning to remember, or null",\n' +
+        '  "response": {"date":"YYYY-MM-DD","text":"markdown big-picture scenario/implication","confidence":"low|medium|high"} or null\n' +
+        '}\n' +
+        'Set "response" to null if you have no bigger-picture point to add this turn.'
     }
   ];
 }

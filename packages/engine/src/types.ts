@@ -46,6 +46,8 @@ export interface RunOptions {
   grounded: boolean;
   /** Whether to include the built-in red-team "Devil's Advocate" vagent. */
   skeptic: boolean;
+  /** Whether to include the built-in "think big" Visionary vagent. */
+  visionary: boolean;
   model: string;
 }
 
