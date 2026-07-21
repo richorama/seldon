@@ -82,4 +82,48 @@ describe('GroundingService', () => {
     expect(fact.status).toBe('unavailable');
     expect(fact.text).toBe('');
   });
+
+  it('caches stable not-found results (no re-fetch)', async () => {
+    let fetches = 0;
+    const fetcher: Fetcher = {
+      name: 'nf',
+      fetch: async (slug) => {
+        fetches++;
+        return {
+          slug,
+          status: 'unavailable',
+          reason: 'not-found',
+          text: '',
+          source: 'test',
+          fetchedAt: new Date().toISOString()
+        };
+      }
+    };
+    const service = new GroundingService(fetcher, new FactCache({ dir }));
+    await service.ground('Ghost');
+    await service.ground('Ghost');
+    expect(fetches).toBe(1);
+  });
+
+  it('does not cache transient errors (re-fetches next time)', async () => {
+    let fetches = 0;
+    const fetcher: Fetcher = {
+      name: 'err',
+      fetch: async (slug) => {
+        fetches++;
+        return {
+          slug,
+          status: 'unavailable',
+          reason: 'error',
+          text: '',
+          source: 'test',
+          fetchedAt: new Date().toISOString()
+        };
+      }
+    };
+    const service = new GroundingService(fetcher, new FactCache({ dir }));
+    await service.ground('Flaky');
+    await service.ground('Flaky');
+    expect(fetches).toBe(2);
+  });
 });

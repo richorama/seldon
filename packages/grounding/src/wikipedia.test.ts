@@ -39,6 +39,7 @@ describe('WikipediaFetcher', () => {
     });
     const fact = await fetcher.fetch('Nonexistent_XYZ');
     expect(fact.status).toBe('unavailable');
+    expect(fact.reason).toBe('not-found');
     expect(fact.text).toBe('');
   });
 
@@ -46,7 +47,9 @@ describe('WikipediaFetcher', () => {
     const fetcher = new WikipediaFetcher({
       fetchImpl: async () => jsonResponse({ type: 'standard', title: 'X', extract: '   ' })
     });
-    expect((await fetcher.fetch('X')).status).toBe('unavailable');
+    const fact = await fetcher.fetch('X');
+    expect(fact.status).toBe('unavailable');
+    expect(fact.reason).toBe('error');
   });
 
   it('flags disambiguation pages', async () => {
@@ -69,6 +72,17 @@ describe('WikipediaFetcher', () => {
         throw new Error('network down');
       }
     });
-    expect((await fetcher.fetch('Anything')).status).toBe('unavailable');
+    const fact = await fetcher.fetch('Anything');
+    expect(fact.status).toBe('unavailable');
+    expect(fact.reason).toBe('error');
+  });
+
+  it('reports a transient error (not not-found) on a non-404 HTTP status', async () => {
+    const fetcher = new WikipediaFetcher({
+      fetchImpl: async () => jsonResponse({ type: 'Internal error' }, false, 503)
+    });
+    const fact = await fetcher.fetch('Flaky_Page');
+    expect(fact.status).toBe('unavailable');
+    expect(fact.reason).toBe('error');
   });
 });

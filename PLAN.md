@@ -94,9 +94,23 @@ build roadmap: what we ship, in what order, and how we know each step is done.
       TTL-aware, keyed by slug.
 - [x] Grounding (default on, via `SELDON_GROUNDING`) wires fact text into entity
       prompts and records `groundedOn`; canonical slugs deduplicate aliases.
+- [x] **Grounding gate:** reject entities whose Wikipedia page 404s (likely
+      fabricated slugs), fail-open on transient errors; surface `rejectedEntities`
+      in the manifest. `Fact.reason` distinguishes `not-found` vs `error`;
+      transient errors are not cached.
 - [x] Cache round-trip + TTL tests.
 - **Done when:** grounding runs end-to-end against Wikipedia, caching is
   exercised, and swapping in another fetcher is a single-file change.
+
+### M5a — Quality: anti-fabrication & red-team
+- [x] Prompt hardening across seed/turn/summary prompts against invented
+      programmes, acronyms, figures and exact dates.
+- [x] Built-in **red-team `SkepticVagent`** ("Devil's Advocate", `SELDON_SKEPTIC`,
+      default on): active from turn 1, injects dated counter-scenarios, exempt
+      from grounding, gets its own cap slot, no Wikipedia link.
+- [x] Tests for gate, skeptic participation, reason plumbing, and env toggles.
+- **Done when:** hallucinated entities are dropped, dissent appears in the
+  timeline, and the summary carries a red-team section.
 
 ### M6 — Polish & docs
 - [x] README with quickstart, env setup, and an example run transcript.

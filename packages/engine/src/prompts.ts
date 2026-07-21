@@ -15,6 +15,10 @@ export function seedMessages(question: string, today: string): LLMMessage[] {
         'Wikipedia page: countries, leaders/persons, companies, organisations, charities, ' +
         'institutions or movements. Use canonical English Wikipedia slugs (the part after ' +
         '/wiki/, using underscores), e.g. "United_Nations", "European_Union", "OpenAI".\n' +
+        'Only nominate entities that genuinely exist and have (or clearly warrant) a real ' +
+        'Wikipedia page. Do NOT invent organisations, programmes, coalitions or people. If ' +
+        'the real protagonist is a specific company or person (not just an abstract project ' +
+        'or product), name that actor rather than a made-up entity around it.\n' +
         `Today is ${today}. Reason about who matters for what comes next.`
     },
     {
@@ -60,7 +64,12 @@ export function entityTurnMessages(params: {
         'nothing new to contribute this turn, stay silent (null response); if you have no ' +
         'further role to play in this scenario at all, withdraw so resources go elsewhere.\n' +
         `Today is ${today}. When you add a response, describe a concrete projected action or ` +
-        'statement and assign it a realistic FUTURE date (after today).' +
+        'statement and assign it a realistic FUTURE date (after today).\n' +
+        'Do NOT fabricate specifics. Do not invent named programmes, initiatives, acronyms, ' +
+        'bills, documents, figures or exact dates that are not established fact or given in ' +
+        'your grounding/the timeline. Describe plausible mechanisms in general terms and frame ' +
+        'them as projections ("likely to", "would probably") rather than asserting invented ' +
+        'detail as fact. Only nominate entities that really exist with a genuine Wikipedia page.' +
         factBlock
     },
     {
@@ -99,7 +108,10 @@ export function summaryMessages(params: {
         'You are the summarisation step of a psychohistory-style prediction engine. You are ' +
         'given the entities that deliberated and the projected timeline they produced. Write ' +
         'a clear, reasoned forecast in Markdown. Be explicit that this is hypothetical ' +
-        'reasoning, not certainty.\n' +
+        'reasoning, not certainty. Do not introduce specific named programmes, figures or ' +
+        'dates that are not present in the timeline you were given; do not manufacture false ' +
+        'precision. Where the deliberation surfaced disagreement or red-team challenges, ' +
+        'represent that dissent faithfully rather than smoothing it into false consensus.\n' +
         `Today is ${today}.`
     },
     {
@@ -110,8 +122,53 @@ export function summaryMessages(params: {
         `Projected timeline:\n${timelineMarkdown}\n\n` +
         'Write the forecast as Markdown with these sections:\n' +
         '## Executive forecast\n## Projected timeline\n## Key actors & stances\n' +
-        '## Uncertainties & branch points\n## Confidence & caveats\n' +
+        '## Dissent & red-team challenges\n## Uncertainties & branch points\n' +
+        '## Confidence & caveats\n' +
         'Return only the Markdown report.'
+    }
+  ];
+}
+
+export function skepticTurnMessages(params: {
+  snapshot: SeldonSnapshot;
+  memory: readonly string[];
+  today: string;
+}): LLMMessage[] {
+  const { snapshot, memory, today } = params;
+  const memoryBlock = memory.length
+    ? `\nYour private notes so far:\n${memory.map((m) => `- ${m}`).join('\n')}\n`
+    : '';
+
+  return [
+    {
+      role: 'system',
+      content:
+        'You are the red-team "Devil\'s Advocate" inside a multi-agent prediction simulation. ' +
+        'You do NOT represent any real-world entity. Your job is to stress-test the emerging ' +
+        'forecast: challenge over-confident claims, expose unstated assumptions, surface ' +
+        'plausible ways the consensus is wrong, and inject the strongest realistic ' +
+        'counter-scenario the other agents have overlooked.\n' +
+        'Contribute ONLY when you can add a substantive challenge or counter-scenario that is ' +
+        'not already reflected in the timeline. Do not fabricate specific named programmes, ' +
+        'figures or dates; argue from mechanisms and incentives. Frame your point as a dated ' +
+        'projected risk/alternative (a FUTURE date after today). If the timeline already ' +
+        'contains healthy dissent and you have nothing sharper to add, stay silent (null ' +
+        'response). You never withdraw and you do not nominate entities.\n' +
+        `Today is ${today}.`
+    },
+    {
+      role: 'user',
+      content:
+        `The situation:\n"""${snapshot.question}"""\n\n` +
+        `Current entities (turn ${snapshot.turn}):\n${snapshot.rosterMarkdown}\n\n` +
+        `Projected timeline so far:\n${snapshot.timelineMarkdown}\n` +
+        memoryBlock +
+        '\nDecide your red-team contribution THIS turn. Return ONLY a JSON object:\n' +
+        '{\n' +
+        '  "memoryNote": "optional private reasoning to remember, or null",\n' +
+        '  "response": {"date":"YYYY-MM-DD","text":"markdown challenge/counter-scenario","confidence":"low|medium|high"} or null\n' +
+        '}\n' +
+        'Set "response" to null if you have no sharper challenge to add this turn.'
     }
   ];
 }

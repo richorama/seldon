@@ -3,6 +3,8 @@ export { SharedContext } from './context.js';
 export type { SeldonEffect, SeldonSnapshot } from './context.js';
 export { EntityVagent } from './entity-vagent.js';
 export type { EntityVagentDeps } from './entity-vagent.js';
+export { SkepticVagent, SKEPTIC_ID, SKEPTIC_NAME } from './skeptic-vagent.js';
+export type { SkepticVagentDeps } from './skeptic-vagent.js';
 export { EntityVagentHost } from './host.js';
 export type { EntityVagentHostDeps } from './host.js';
 export { seed } from './seed.js';

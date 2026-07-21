@@ -4,6 +4,7 @@ import type { LLMProvider } from '@seldon/llm';
 import type { Fact, GroundingService } from '@seldon/grounding';
 import { SharedContext, type SeldonEffect, type SeldonSnapshot } from './context.js';
 import { EntityVagent } from './entity-vagent.js';
+import { SkepticVagent, SKEPTIC_ID, SKEPTIC_NAME } from './skeptic-vagent.js';
 import { wikipediaUrl, type EntityRef, type EntityType } from './types.js';
 
 export interface EntityVagentHostDeps {
@@ -11,6 +12,8 @@ export interface EntityVagentHostDeps {
   provider: LLMProvider;
   today: string;
   grounding?: GroundingService;
+  /** Include the built-in red-team skeptic vagent. */
+  skeptic?: boolean;
   /** Optional per-turn hook, invoked after effects are applied. */
   onTurn?: (turn: number, responsesAdded: number, totalEntities: number) => void;
 }
@@ -34,6 +37,7 @@ interface Admitted {
 export class EntityVagentHost implements VagentHost<SeldonSnapshot, SeldonEffect> {
   private readonly deps: EntityVagentHostDeps;
   private readonly admitted = new Map<string, Admitted>();
+  private readonly rejected: EntityRef[] = [];
   private runtime: Runtime<SeldonSnapshot, SeldonEffect> | null = null;
   private producedThisTurn = false;
 
@@ -46,6 +50,29 @@ export class EntityVagentHost implements VagentHost<SeldonSnapshot, SeldonEffect
     this.runtime = runtime;
   }
 
+  /**
+   * Register the built-in red-team vagent so it is active from turn 1. It joins
+   * the roster as a non-Wikipedia entity and is exempt from grounding.
+   */
+  registerSkeptic(): void {
+    const runtime = this.requireRuntime();
+    if (!runtime.request(SKEPTIC_ID)) return;
+    this.deps.context.addEntity({
+      slug: SKEPTIC_ID,
+      name: SKEPTIC_NAME,
+      type: 'other',
+      wikipediaUrl: '',
+      status: 'active',
+      nominatedBy: null,
+      firstSeenTurn: 0
+    });
+  }
+
+  /** Entities rejected because grounding found no such page (likely fabricated). */
+  rejectedEntities(): EntityRef[] {
+    return [...this.rejected];
+  }
+
   /** Admit a seed entity (first turn), grounding and canonicalising its slug. */
   async admitSeed(ref: EntityRef): Promise<void> {
     await this.admit(ref, null, 0);
@@ -56,6 +83,9 @@ export class EntityVagentHost implements VagentHost<SeldonSnapshot, SeldonEffect
   }
 
   async activate(id: string): Promise<Vagent<SeldonSnapshot, SeldonEffect>> {
+    if (id === SKEPTIC_ID) {
+      return new SkepticVagent({ provider: this.deps.provider, today: this.deps.today });
+    }
     const admitted = this.admitted.get(id);
     const entity = this.deps.context.getEntity(id);
     const name = admitted?.ref.name ?? entity?.name ?? id;
@@ -147,6 +177,15 @@ export class EntityVagentHost implements VagentHost<SeldonSnapshot, SeldonEffect
     if (this.deps.grounding) {
       fact = await this.deps.grounding.ground(ref.slug);
       if (fact.status === 'ok' && fact.canonicalSlug) slug = fact.canonicalSlug;
+      // Gate hallucinated entities: when grounding can verify existence and the
+      // source has no such page ('not-found'), reject rather than deliberate.
+      // Transient errors fail open (we cannot prove the entity is fictional).
+      if (fact.status === 'unavailable' && fact.reason === 'not-found') {
+        if (!this.rejected.some((r) => r.slug === ref.slug)) {
+          this.rejected.push({ slug: ref.slug, name: ref.name, type: ref.type });
+        }
+        return false;
+      }
     }
 
     // Deduplicate by (canonical) slug: same actor nominated twice is admitted once.

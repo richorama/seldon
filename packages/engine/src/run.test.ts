@@ -9,6 +9,7 @@ const OPTIONS: RunOptions = {
   maxVagents: 6,
   concurrency: 2,
   grounded: false,
+  skeptic: false,
   model: 'mock'
 };
 
@@ -157,5 +158,80 @@ describe('predict (full mock run)', () => {
     // Root + one nominee accepted; the rest dropped.
     expect(manifest.entities).toHaveLength(2);
     expect(manifest.droppedNominations.length).toBe(2);
+  });
+
+  it('includes the skeptic (with its own cap slot) when enabled', async () => {
+    const provider = new MockProvider((messages) => {
+      if (isSeed(messages)) {
+        return JSON.stringify({ entities: [{ slug: 'Root', name: 'Root', type: 'organisation' }] });
+      }
+      if (isSummary(messages)) return 'ok';
+      const joined = messages.map((x) => x.content).join('\n');
+      if (joined.includes("Devil's Advocate")) {
+        return JSON.stringify({
+          response: { date: '2027-05-01', text: 'But consider the opposite outcome.' }
+        });
+      }
+      return JSON.stringify({ response: null });
+    });
+    const manifest = await predict({
+      question: 'q',
+      provider,
+      // maxVagents: 1 would normally leave no room, but the skeptic gets its own slot.
+      options: { ...OPTIONS, maxVagents: 1, skeptic: true }
+    });
+    const skeptic = manifest.entities.find((e) => e.slug === 'seldon-skeptic');
+    expect(skeptic).toBeDefined();
+    expect(skeptic?.wikipediaUrl).toBe('');
+    expect(manifest.entities.find((e) => e.slug === 'Root')).toBeDefined();
+    expect(manifest.timeline.some((r) => r.entitySlug === 'seldon-skeptic')).toBe(true);
+    // Skeptic renders without a hyperlink.
+    expect(manifestToMarkdown(manifest)).toContain("**Devil's Advocate (red team)**");
+  });
+
+  it('surfaces grounding-rejected (fabricated) entities in the manifest', async () => {
+    const grounding = {
+      async ground(slug: string) {
+        if (slug === 'Fake_Org') {
+          return {
+            slug,
+            status: 'unavailable' as const,
+            reason: 'not-found' as const,
+            text: '',
+            source: 'test',
+            fetchedAt: new Date().toISOString()
+          };
+        }
+        return {
+          slug,
+          status: 'ok' as const,
+          canonicalSlug: slug,
+          text: `About ${slug}`,
+          source: 'test',
+          fetchedAt: new Date().toISOString()
+        };
+      }
+    };
+    const provider = new MockProvider((messages) => {
+      if (isSeed(messages)) {
+        return JSON.stringify({
+          entities: [
+            { slug: 'Real_Org', name: 'Real', type: 'organisation' },
+            { slug: 'Fake_Org', name: 'Fake', type: 'organisation' }
+          ]
+        });
+      }
+      if (isSummary(messages)) return 'ok';
+      return JSON.stringify({ response: null });
+    });
+    const manifest = await predict({
+      question: 'q',
+      provider,
+      options: { ...OPTIONS, grounded: true },
+      grounding: grounding as unknown as Parameters<typeof predict>[0]['grounding']
+    });
+    expect(manifest.entities.some((e) => e.slug === 'Fake_Org')).toBe(false);
+    expect(manifest.rejectedEntities.map((e) => e.slug)).toContain('Fake_Org');
+    expect(manifest.entities.some((e) => e.slug === 'Real_Org')).toBe(true);
   });
 });

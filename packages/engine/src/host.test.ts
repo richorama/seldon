@@ -38,6 +38,22 @@ function aliasGrounding(map: Record<string, string>): GroundingService {
   } as unknown as GroundingService;
 }
 
+/** Grounding stub returning an unavailable fact with a given reason. */
+function unavailableGrounding(reason: 'not-found' | 'error'): GroundingService {
+  return {
+    async ground(slug: string): Promise<Fact> {
+      return {
+        slug,
+        status: 'unavailable',
+        reason,
+        text: '',
+        source: 'test',
+        fetchedAt: new Date().toISOString()
+      };
+    }
+  } as unknown as GroundingService;
+}
+
 const provider = {} as LLMProvider;
 
 describe('EntityVagentHost admission', () => {
@@ -80,5 +96,70 @@ describe('EntityVagentHost admission', () => {
     expect(context.hasEntity('Canonical_X')).toBe(true);
     const vagent = await host.activate('Canonical_X');
     expect(vagent.id).toBe('Canonical_X');
+  });
+
+  it('rejects entities with no Wikipedia page (not-found) when grounded', async () => {
+    const context = new SharedContext('Q?');
+    const host = new EntityVagentHost({
+      context,
+      provider,
+      today: '2025-01-01',
+      grounding: unavailableGrounding('not-found')
+    });
+    const { runtime, requested } = fakeRuntime();
+    host.bind(runtime);
+
+    const added = await host.admitSeed({ slug: 'Fake_Page', name: 'Fake', type: 'company' });
+    expect(added).toBeUndefined();
+    expect(context.hasEntity('Fake_Page')).toBe(false);
+    expect(requested).toEqual([]);
+    expect(host.rejectedEntities().map((e) => e.slug)).toEqual(['Fake_Page']);
+  });
+
+  it('does not record the same rejected slug twice', async () => {
+    const context = new SharedContext('Q?');
+    const host = new EntityVagentHost({
+      context,
+      provider,
+      today: '2025-01-01',
+      grounding: unavailableGrounding('not-found')
+    });
+    const { runtime } = fakeRuntime();
+    host.bind(runtime);
+
+    await host['admit']({ slug: 'Ghost', name: 'Ghost', type: 'company' }, 'a', 1);
+    await host['admit']({ slug: 'Ghost', name: 'Ghost', type: 'company' }, 'b', 2);
+    expect(host.rejectedEntities().map((e) => e.slug)).toEqual(['Ghost']);
+  });
+
+  it('fails open on transient grounding errors (admits the entity)', async () => {
+    const context = new SharedContext('Q?');
+    const host = new EntityVagentHost({
+      context,
+      provider,
+      today: '2025-01-01',
+      grounding: unavailableGrounding('error')
+    });
+    const { runtime } = fakeRuntime();
+    host.bind(runtime);
+
+    await host.admitSeed({ slug: 'Real_Page', name: 'Real', type: 'company' });
+    expect(context.hasEntity('Real_Page')).toBe(true);
+    expect(host.rejectedEntities()).toHaveLength(0);
+  });
+
+  it('registers the skeptic as a non-Wikipedia entity and activates it', async () => {
+    const context = new SharedContext('Q?');
+    const host = new EntityVagentHost({ context, provider, today: '2025-01-01', skeptic: true });
+    const { runtime, requested } = fakeRuntime();
+    host.bind(runtime);
+
+    host.registerSkeptic();
+    expect(requested).toContain('seldon-skeptic');
+    const skeptic = context.entityList().find((e) => e.slug === 'seldon-skeptic');
+    expect(skeptic?.wikipediaUrl).toBe('');
+
+    const vagent = await host.activate('seldon-skeptic');
+    expect(vagent.id).toBe('seldon-skeptic');
   });
 });

@@ -44,6 +44,8 @@ export interface RunOptions {
   maxVagents: number;
   concurrency: number;
   grounded: boolean;
+  /** Whether to include the built-in red-team "Devil's Advocate" vagent. */
+  skeptic: boolean;
   model: string;
 }
 
@@ -55,6 +57,8 @@ export interface RunManifest {
   timeline: Response[];
   report: string | null;
   droppedNominations: string[];
+  /** Entities rejected because grounding found no such page (likely fabricated). */
+  rejectedEntities: EntityRef[];
   stoppedBecause: string;
   turnsRun: number;
 }

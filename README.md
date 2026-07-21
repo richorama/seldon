@@ -64,6 +64,7 @@ Optional Seldon settings (also read from the environment / `.env`):
 
 ```bash
 export SELDON_GROUNDING="true"   # Wikipedia grounding, on by default; false/0/off/no to disable
+export SELDON_SKEPTIC="true"     # built-in red-team vagent, on by default; false/0/off/no to disable
 ```
 
 The provider targets Azure's **v1 API** (`<host>/openai/v1/`), so both classic
@@ -116,14 +117,29 @@ Grounding is **on by default** and controlled via the `SELDON_GROUNDING`
 environment variable (`.env` supported); set it to `false`/`0`/`off`/`no` to
 disable. Each entity is grounded on its **English Wikipedia summary**
 (via the REST API) before it deliberates, so agents reason from a real, current
-description rather than the model's frozen prior. Missing pages, network errors
-and timeouts degrade gracefully to "unavailable" for that entity — the run
-continues. Facts persist under `~/.seldon/cache/facts/` as a JSON metadata file
-plus a Markdown body per slug, honouring a TTL, so re-runs reuse them.
+description rather than the model's frozen prior. Network errors and timeouts
+degrade gracefully to "unavailable" for that entity (fail-open) — the run
+continues. When grounding is on, entities whose Wikipedia page genuinely does
+**not exist** (HTTP 404) are treated as likely fabricated slugs and are
+**rejected** rather than allowed to deliberate; they are listed under
+`rejectedEntities` in the manifest. Facts persist under
+`~/.seldon/cache/facts/` as a JSON metadata file plus a Markdown body per slug,
+honouring a TTL, so re-runs reuse them (transient errors are not cached, so they
+retry).
 
 The fetcher sits behind a `Fetcher` interface, so swapping in additional sources
 (news, search) is a single-file change. Responses record which fact-cache keys
 they were grounded on (`groundedOn`).
+
+## Red-team vagent (`SELDON_SKEPTIC`)
+
+On by default, Seldon adds a built-in **"Devil's Advocate"** vagent that plays no
+real-world entity. Instead it stress-tests the emerging consensus each turn —
+challenging over-confident claims, surfacing unstated assumptions, and injecting
+the strongest realistic counter-scenario as a dated timeline entry the other
+vagents then react to. It never withdraws, does not nominate entities, is exempt
+from grounding, and occupies its own slot so it never displaces a real entity
+under `--max-agents`. Disable it with `SELDON_SKEPTIC=false`.
 
 ## Development
 

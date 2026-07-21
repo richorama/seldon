@@ -332,18 +332,42 @@ Enabled by default; controlled via the `SELDON_GROUNDING` env var (set to
   is the fallback used when no fetcher is wired in. The interface is pluggable to
   news/search sources later. A `Fact` also carries a `canonicalSlug` (the
   redirect-resolved Wikipedia slug), which the engine uses to **deduplicate**
-  entities nominated under different aliases.
+entities nominated under different aliases. An unavailable `Fact` carries a
+`reason`: `'not-found'` (HTTP 404 — the page genuinely does not exist, so the
+entity is likely a hallucinated slug) or `'error'` (transient network/timeout/
+non-404 failure, treated fail-open).
 - **`FactCache`** — persistent on-disk cache (predictions aren't kept, but facts
-  are). Layout under `~/.seldon/cache/facts/`:
-  - `<slug>.json` — `{ slug, status, source, url, canonicalSlug, fetchedAt }`
-  - `<slug>.md`   — the human-readable fact text (Markdown)
+are). Layout under `~/.seldon/cache/facts/`:
+- `<slug>.json` — `{ slug, status, reason?, source, url, canonicalSlug, fetchedAt }`
+- `<slug>.md`   — the human-readable fact text (Markdown)
 
-  Lookups honour a TTL (a cache-level option); stale entries are refetched. The
-  cache is keyed by slug so re-runs and different questions share grounding.
-  Entries cached before `canonicalSlug` existed are backfilled from the page URL.
+Lookups honour a TTL (a cache-level option); stale entries are refetched. The
+cache is keyed by slug so re-runs and different questions share grounding.
+Entries cached before `canonicalSlug` existed are backfilled from the page URL.
+Only `ok` and stable `not-found` facts are cached; transient `error` facts are
+**not** cached, so a flaky fetch retries on the next run.
+
+**Grounding gate.** When grounding is on, the engine's admission path rejects any
+entity whose fact is `unavailable` with reason `not-found` — a fabricated
+Wikipedia slug never gets to deliberate. Rejected entities are surfaced in the
+run manifest under `rejectedEntities`. Transient `error` results fail open (we
+cannot prove non-existence), and the gate is inactive when grounding is off.
 
 When grounded, an entity-vagent's prompt includes its cached fact text, and any
 `Response` records the cache keys it drew on in `groundedOn`.
+
+---
+
+## 6a. Red-team vagent — the skeptic
+
+Enabled by default (`SELDON_SKEPTIC`, `false`/`0`/`off`/`no` to disable), the
+`SkepticVagent` ("Devil's Advocate") is a built-in adversarial vagent that
+represents no real-world entity. It is active from turn 1 and each turn may add a
+dated counter-scenario/challenge to the shared timeline, so other vagents react
+to dissent instead of converging on false consensus. It never withdraws, does not
+nominate entities, and is exempt from grounding. It joins the roster with an empty
+`wikipediaUrl` (rendered without a hyperlink) and is given its own runtime slot
+(`maxVagents + 1`) so it never displaces a real entity under the cap.
 
 ---
 
@@ -367,8 +391,9 @@ Default behaviour: run in memory, print the Markdown report and the entity list
 to stdout, discard everything else. `--save` writes
 `./seldon-runs/<timestamp>/manifest.json` + `report.md` for the curious.
 
-Settings such as `SELDON_GROUNDING` (grounding on/off) and the Azure OpenAI
-credentials are read from the environment or a `.env` file, not from flags.
+Settings such as `SELDON_GROUNDING` (grounding on/off), `SELDON_SKEPTIC`
+(red-team vagent on/off) and the Azure OpenAI credentials are read from the
+environment or a `.env` file, not from flags.
 
 Example:
 

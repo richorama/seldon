@@ -3,6 +3,14 @@ export interface Fact {
   slug: string;
   /** 'ok' when text is present; 'unavailable' when no source could supply it. */
   status: 'ok' | 'unavailable';
+  /**
+   * Why an entity is unavailable (only set when status is 'unavailable'):
+   *  - 'not-found': the source has no such page — the entity likely does not
+   *    exist (e.g. a hallucinated Wikipedia slug). Safe to reject.
+   *  - 'error': a transient failure (network/timeout/non-404). Fail open — do
+   *    not treat the entity as non-existent.
+   */
+  reason?: 'not-found' | 'error';
   /** Markdown summary text (empty when unavailable). */
   text: string;
   /** Where the fact came from, e.g. 'wikipedia', 'stub'. */

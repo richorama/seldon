@@ -44,15 +44,19 @@ export async function predict(params: PredictParams): Promise<RunManifest> {
     provider,
     today,
     grounding,
+    skeptic: options.skeptic,
     onTurn: (turn, responses, entities) =>
       onEvent?.({ type: 'turn-complete', turn, responses, entities })
   });
   const runtime = new Runtime<SeldonSnapshot, SeldonEffect>(host, {
     maxTurns: options.maxTurns,
-    maxVagents: options.maxVagents,
+    // The skeptic occupies its own slot so it never displaces a real entity.
+    maxVagents: options.maxVagents + (options.skeptic ? 1 : 0),
     concurrency: options.concurrency
   });
   host.bind(runtime);
+
+  if (options.skeptic) host.registerSkeptic();
 
   const seedEntities = params.seedSlugs?.length
     ? seedFromSlugs(params.seedSlugs)
@@ -75,6 +79,7 @@ export async function predict(params: PredictParams): Promise<RunManifest> {
     timeline: context.timeline(),
     report,
     droppedNominations: summary.droppedRequests,
+    rejectedEntities: host.rejectedEntities(),
     stoppedBecause: summary.stoppedBecause,
     turnsRun: summary.turnsRun
   };

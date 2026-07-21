@@ -11,7 +11,7 @@ import {
   type RunOptions
 } from '@seldon/engine';
 import { parseArgs, HELP } from './args.js';
-import { loadDotenv, groundingEnabled } from './env.js';
+import { loadDotenv, groundingEnabled, skepticEnabled } from './env.js';
 
 async function main(rawArgv: string[]): Promise<number> {
   loadDotenv();
@@ -45,11 +45,13 @@ async function main(rawArgv: string[]): Promise<number> {
   }
 
   const grounded = groundingEnabled();
+  const skeptic = skepticEnabled();
   const options: RunOptions = {
     maxTurns: args.turns,
     maxVagents: args.maxAgents,
     concurrency: args.concurrency,
     grounded,
+    skeptic,
     model: process.env.AZURE_OPENAI_DEPLOYMENT ?? 'azure-openai'
   };
 
@@ -73,6 +75,12 @@ async function main(rawArgv: string[]): Promise<number> {
     if (manifest.droppedNominations.length) {
       process.stdout.write(
         `\nDropped nominations (cap reached): ${manifest.droppedNominations.join(', ')}\n`
+      );
+    }
+    if (manifest.rejectedEntities.length) {
+      process.stdout.write(
+        `\nRejected (no Wikipedia page — likely fabricated): ` +
+          `${manifest.rejectedEntities.map((e) => e.slug).join(', ')}\n`
       );
     }
   }

@@ -19,11 +19,19 @@ export function manifestToMarkdown(manifest: RunManifest): string {
   for (const e of manifest.entities) {
     const flag = e.status === 'withdrawn' ? ' _(withdrawn)_' : '';
     const via = e.nominatedBy ? ` — nominated by \`${e.nominatedBy}\`` : '';
-    lines.push(`- [${e.name}](${e.wikipediaUrl}) (${e.type})${flag}${via}`);
+    const label = e.wikipediaUrl ? `[${e.name}](${e.wikipediaUrl})` : `**${e.name}**`;
+    lines.push(`- ${label} (${e.type})${flag}${via}`);
   }
   if (manifest.droppedNominations.length) {
     lines.push('');
     lines.push(`_Dropped nominations (cap reached): ${manifest.droppedNominations.join(', ')}_`);
+  }
+  if (manifest.rejectedEntities.length) {
+    lines.push('');
+    lines.push(
+      `_Rejected (no Wikipedia page — likely fabricated): ` +
+        `${manifest.rejectedEntities.map((e) => e.slug).join(', ')}_`
+    );
   }
   return lines.join('\n') + '\n';
 }
@@ -33,7 +41,8 @@ export function entityListText(manifest: RunManifest): string {
   return manifest.entities
     .map((e) => {
       const flag = e.status === 'withdrawn' ? ' (withdrawn)' : '';
-      return `  • ${e.name} [${e.type}] ${e.wikipediaUrl}${flag}`;
+      const url = e.wikipediaUrl ? ` ${e.wikipediaUrl}` : '';
+      return `  • ${e.name} [${e.type}]${url}${flag}`;
     })
     .join('\n');
 }

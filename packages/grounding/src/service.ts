@@ -19,7 +19,11 @@ export class GroundingService {
     const cached = await this.cache.get(slug);
     if (cached) return cached;
     const fact = await this.fetcher.fetch(slug);
-    await this.cache.set(fact);
+    // Cache successes and stable "not-found" results, but not transient errors,
+    // so a flaky fetch is retried on the next run rather than sticking.
+    if (fact.status === 'ok' || fact.reason === 'not-found') {
+      await this.cache.set(fact);
+    }
     return fact;
   }
 }

@@ -6,6 +6,7 @@ import type { Fact } from './fetcher.js';
 interface FactMeta {
   slug: string;
   status: Fact['status'];
+  reason?: Fact['reason'];
   source: string;
   url?: string;
   canonicalSlug?: string;
@@ -71,6 +72,7 @@ export class FactCache {
     const meta: FactMeta = {
       slug: fact.slug,
       status: fact.status,
+      reason: fact.reason,
       source: fact.source,
       url: fact.url,
       canonicalSlug: fact.canonicalSlug,

@@ -52,11 +52,15 @@ export class WikipediaFetcher implements Fetcher {
         headers: { accept: 'application/json', 'user-agent': this.userAgent },
         signal: controller.signal
       });
-      if (!res.ok) return this.unavailable(slug);
+      if (!res.ok) {
+        // 404 means the page genuinely does not exist (likely a hallucinated
+        // slug); any other status is a transient/server error (fail open).
+        return this.unavailable(slug, res.status === 404 ? 'not-found' : 'error');
+      }
 
       const data = (await res.json()) as WikiSummary;
       const extract = (data.extract ?? '').trim();
-      if (!extract) return this.unavailable(slug);
+      if (!extract) return this.unavailable(slug, 'error');
 
       return {
         slug,
@@ -68,7 +72,7 @@ export class WikipediaFetcher implements Fetcher {
         fetchedAt: new Date().toISOString()
       };
     } catch {
-      return this.unavailable(slug);
+      return this.unavailable(slug, 'error');
     } finally {
       clearTimeout(timer);
     }
@@ -85,10 +89,11 @@ export class WikipediaFetcher implements Fetcher {
     return parts.join('\n\n');
   }
 
-  private unavailable(slug: string): Fact {
+  private unavailable(slug: string, reason: 'not-found' | 'error'): Fact {
     return {
       slug,
       status: 'unavailable',
+      reason,
       text: '',
       source: 'wikipedia',
       fetchedAt: new Date().toISOString()

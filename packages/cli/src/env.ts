@@ -24,3 +24,14 @@ export function groundingEnabled(env: NodeJS.ProcessEnv = process.env): boolean 
   if (raw === undefined || raw.trim() === '') return true;
   return !/^(false|0|off|no)$/i.test(raw.trim());
 }
+
+/**
+ * Whether the built-in red-team "Devil's Advocate" vagent is enabled, read from
+ * the SELDON_SKEPTIC env var. On by default; set SELDON_SKEPTIC to a falsy value
+ * (false/0/off/no) to disable it.
+ */
+export function skepticEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  const raw = env.SELDON_SKEPTIC;
+  if (raw === undefined || raw.trim() === '') return true;
+  return !/^(false|0|off|no)$/i.test(raw.trim());
+}
