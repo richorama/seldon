@@ -1,0 +1,21 @@
+{
+  "name": "@seldon/engine",
+  "version": "0.1.0",
+  "description": "Seldon prediction engine: entity vagents deliberate over future events to produce a reasoned, time-stamped forecast.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@seldon/vagents": "0.1.0",
+    "@seldon/llm": "0.1.0",
+    "@seldon/grounding": "0.1.0",
+    "zod": "^3.24.1"
+  }
+}

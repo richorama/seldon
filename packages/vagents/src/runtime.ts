@@ -54,15 +54,17 @@ export class Runtime<Snapshot, Effect> {
 
   /**
    * Request activation of a vagent by id. Idempotent; respects `maxVagents`.
-   * Requests beyond the cap (or for already-known ids) are ignored/dropped.
+   * Returns true if the request was accepted (already known counts as accepted),
+   * false if it was dropped because the cap is reached.
    */
-  request(id: VagentId): void {
-    if (this.activations.has(id) || this.pending.has(id)) return;
+  request(id: VagentId): boolean {
+    if (this.activations.has(id) || this.pending.has(id)) return true;
     if (this.totalKnown() >= this.opts.maxVagents) {
       this.dropped.push(id);
-      return;
+      return false;
     }
     this.pending.add(id);
+    return true;
   }
 
   /** Number of currently active (non-withdrawn, eligible) vagents. */
