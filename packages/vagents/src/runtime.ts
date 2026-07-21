@@ -110,7 +110,7 @@ export class Runtime<Snapshot, Effect> {
       turnsRun,
       activated: [...this.activations.keys()],
       withdrawn: [...this.activations.values()].filter((a) => a.withdrawn).map((a) => a.vagent.id),
-      droppedRequests: [...this.dropped],
+      droppedRequests: [...new Set(this.dropped)],
       stoppedBecause
     };
   }

@@ -11,8 +11,10 @@ import {
   type RunOptions
 } from '@seldon/engine';
 import { parseArgs, HELP } from './args.js';
+import { loadDotenv } from './env.js';
 
 async function main(rawArgv: string[]): Promise<number> {
+  loadDotenv();
   const [command, ...rest] = rawArgv;
 
   if (!command || command === 'help' || command === '-h' || command === '--help') {

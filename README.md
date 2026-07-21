@@ -51,14 +51,23 @@ npm run build
 npm test
 ```
 
-Configure Azure OpenAI (via environment):
+Configure Azure OpenAI (via environment or a `.env` file in the working directory):
 
 ```bash
-export AZURE_OPENAI_ENDPOINT="https://<resource>.openai.azure.com"
-export AZURE_OPENAI_API_KEY="<key>"
-export AZURE_OPENAI_DEPLOYMENT="<deployment-name>"
+export AZURE_OPENAI_ENDPOINT="https://<resource>.services.ai.azure.com"  # or the classic *.openai.azure.com
+export AZURE_OPENAI_API_KEY="<key>"        # AZURE_OPENAI_KEY is also accepted
+export AZURE_OPENAI_DEPLOYMENT="<deployment-name>"   # e.g. gpt-5-mini
 export AZURE_OPENAI_API_VERSION="2024-10-21"   # optional
 ```
+
+The provider targets Azure's **v1 API** (`<host>/openai/v1/`), so both classic
+`*.openai.azure.com` and newer `*.services.ai.azure.com` Foundry endpoints work —
+a full endpoint path (e.g. ending `/openai/v1/responses`) is normalised
+automatically. For reasoning models (e.g. the GPT‑5 family) that only allow the
+default sampling temperature, the provider detects the rejection and retries
+without `temperature`.
+
+A `.env` file (git-ignored) is loaded automatically by the CLI.
 
 Run a prediction:
 

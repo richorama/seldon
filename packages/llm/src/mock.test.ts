@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MockProvider } from './mock.js';
-import { azureConfigFromEnv } from './azure-openai.js';
+import { azureConfigFromEnv, toV1BaseUrl } from './azure-openai.js';
 
 describe('MockProvider', () => {
   it('returns scripted responses in order and records calls', async () => {
@@ -40,6 +40,29 @@ describe('azureConfigFromEnv', () => {
   it('throws listing missing variables', () => {
     expect(() => azureConfigFromEnv({} as NodeJS.ProcessEnv)).toThrow(
       /AZURE_OPENAI_ENDPOINT.*AZURE_OPENAI_API_KEY.*AZURE_OPENAI_DEPLOYMENT/
+    );
+  });
+
+  it('accepts AZURE_OPENAI_KEY as an alias for the API key', () => {
+    const config = azureConfigFromEnv({
+      AZURE_OPENAI_ENDPOINT: 'https://x.services.ai.azure.com',
+      AZURE_OPENAI_KEY: 'aliased-key',
+      AZURE_OPENAI_DEPLOYMENT: 'gpt-5-mini'
+    } as NodeJS.ProcessEnv);
+    expect(config.apiKey).toBe('aliased-key');
+  });
+});
+
+describe('toV1BaseUrl', () => {
+  it('normalises bare, classic and full v1 endpoints to <host>/openai/v1/', () => {
+    expect(toV1BaseUrl('https://res.services.ai.azure.com')).toBe(
+      'https://res.services.ai.azure.com/openai/v1/'
+    );
+    expect(toV1BaseUrl('https://res.openai.azure.com')).toBe(
+      'https://res.openai.azure.com/openai/v1/'
+    );
+    expect(toV1BaseUrl('https://res.services.ai.azure.com/openai/v1/responses')).toBe(
+      'https://res.services.ai.azure.com/openai/v1/'
     );
   });
 });
