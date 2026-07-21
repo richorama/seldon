@@ -13,3 +13,14 @@ export function loadDotenv(path = resolve(process.cwd(), '.env')): void {
     loader(path);
   }
 }
+
+/**
+ * Whether Wikipedia grounding is enabled, read from the SELDON_GROUNDING env
+ * var. Grounding is on by default; set SELDON_GROUNDING to a falsy value
+ * (false/0/off/no) to disable it.
+ */
+export function groundingEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  const raw = env.SELDON_GROUNDING;
+  if (raw === undefined || raw.trim() === '') return true;
+  return !/^(false|0|off|no)$/i.test(raw.trim());
+}

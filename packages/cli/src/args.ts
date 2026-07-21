@@ -3,7 +3,6 @@ export interface ParsedArgs {
   turns: number;
   maxAgents: number;
   concurrency: number;
-  ground: boolean;
   save: string | null; // null = don't save; '' = default path; else explicit path
   seed: string[] | null;
   json: boolean;
@@ -23,7 +22,6 @@ export function parseArgs(argv: string[]): ParsedArgs {
     turns: DEFAULTS.turns,
     maxAgents: DEFAULTS.maxAgents,
     concurrency: DEFAULTS.concurrency,
-    ground: false,
     save: null,
     seed: null,
     json: false,
@@ -47,9 +45,6 @@ export function parseArgs(argv: string[]): ParsedArgs {
         break;
       case '--concurrency':
         args.concurrency = requireInt(arg, argv[++i]);
-        break;
-      case '--ground':
-        args.ground = true;
         break;
       case '--json':
         args.json = true;
@@ -98,7 +93,6 @@ Options:
   --turns <n>         max deliberation turns            (default ${DEFAULTS.turns})
   --max-agents <n>    hard cap on total entities         (default ${DEFAULTS.maxAgents})
   --concurrency <n>   parallel LLM calls                 (default ${DEFAULTS.concurrency})
-  --ground            enable web grounding (v1: stub + disk cache)
   --seed <a,b,c>      force initial entity slugs instead of the seeding step
   --save [path]       persist manifest.json + report.md (default ./seldon-runs/<ts>)
   --json              print the run manifest as JSON to stdout
@@ -108,4 +102,8 @@ Options:
 Azure OpenAI configuration (environment):
   AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT,
   AZURE_OPENAI_API_VERSION (optional)
+
+Other settings (environment / .env):
+  SELDON_GROUNDING   enable Wikipedia grounding (default on; set to
+                     false/0/off/no to disable)
 `;

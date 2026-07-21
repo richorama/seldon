@@ -60,6 +60,12 @@ export AZURE_OPENAI_DEPLOYMENT="<deployment-name>"   # e.g. gpt-5-mini
 export AZURE_OPENAI_API_VERSION="2024-10-21"   # optional
 ```
 
+Optional Seldon settings (also read from the environment / `.env`):
+
+```bash
+export SELDON_GROUNDING="true"   # Wikipedia grounding, on by default; false/0/off/no to disable
+```
+
 The provider targets Azure's **v1 API** (`<host>/openai/v1/`), so both classic
 `*.openai.azure.com` and newer `*.services.ai.azure.com` Foundry endpoints work —
 a full endpoint path (e.g. ending `/openai/v1/responses`) is normalised
@@ -89,7 +95,6 @@ seldon predict "<question or news item>" [options]
   --turns <n>         max deliberation turns            (default 4)
   --max-agents <n>    hard cap on total entities         (default 12)
   --concurrency <n>   parallel LLM calls                 (default 4)
-  --ground            enable web grounding (v1: stub + disk cache)
   --seed <a,b,c>      force initial entity slugs instead of the seeding step
   --save [path]       persist manifest.json + report.md (default ./seldon-runs/<ts>)
   --json              print the run manifest as JSON to stdout
@@ -97,9 +102,11 @@ seldon predict "<question or news item>" [options]
   -h, --help          show this help
 ```
 
-## Web grounding (`--ground`)
+## Web grounding (`SELDON_GROUNDING`)
 
-With `--ground`, each entity is grounded on its **English Wikipedia summary**
+Grounding is **on by default** and controlled via the `SELDON_GROUNDING`
+environment variable (`.env` supported); set it to `false`/`0`/`off`/`no` to
+disable. Each entity is grounded on its **English Wikipedia summary**
 (via the REST API) before it deliberates, so agents reason from a real, current
 description rather than the model's frozen prior. Missing pages, network errors
 and timeouts degrade gracefully to "unavailable" for that entity — the run

@@ -11,7 +11,7 @@ import {
   type RunOptions
 } from '@seldon/engine';
 import { parseArgs, HELP } from './args.js';
-import { loadDotenv } from './env.js';
+import { loadDotenv, groundingEnabled } from './env.js';
 
 async function main(rawArgv: string[]): Promise<number> {
   loadDotenv();
@@ -44,11 +44,12 @@ async function main(rawArgv: string[]): Promise<number> {
     return 1;
   }
 
+  const grounded = groundingEnabled();
   const options: RunOptions = {
     maxTurns: args.turns,
     maxVagents: args.maxAgents,
     concurrency: args.concurrency,
-    grounded: args.ground,
+    grounded,
     model: process.env.AZURE_OPENAI_DEPLOYMENT ?? 'azure-openai'
   };
 
@@ -59,7 +60,7 @@ async function main(rawArgv: string[]): Promise<number> {
     question: args.question,
     provider,
     options,
-    grounding: args.ground ? new GroundingService(new WikipediaFetcher()) : undefined,
+    grounding: grounded ? new GroundingService(new WikipediaFetcher()) : undefined,
     seedSlugs: args.seed ?? undefined,
     onEvent
   });

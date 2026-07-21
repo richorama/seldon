@@ -8,7 +8,6 @@ describe('parseArgs', () => {
     expect(a.turns).toBe(4);
     expect(a.maxAgents).toBe(12);
     expect(a.concurrency).toBe(4);
-    expect(a.ground).toBe(false);
     expect(a.save).toBeNull();
   });
 
@@ -18,10 +17,9 @@ describe('parseArgs', () => {
   });
 
   it('parses numeric and boolean flags', () => {
-    const a = parseArgs(['q', '--turns', '6', '--max-agents', '20', '--ground', '--verbose']);
+    const a = parseArgs(['q', '--turns', '6', '--max-agents', '20', '--verbose']);
     expect(a.turns).toBe(6);
     expect(a.maxAgents).toBe(20);
-    expect(a.ground).toBe(true);
     expect(a.verbose).toBe(true);
   });
 

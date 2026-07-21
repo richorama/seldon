@@ -201,7 +201,7 @@ interface Response {
   date: string;              // FUTURE event date, ISO 8601 (YYYY-MM-DD)
   text: string;              // Markdown — the public statement / projected action
   confidence?: 'low' | 'medium' | 'high';
-  groundedOn?: string[];     // fact-cache keys used, when --ground is on
+  groundedOn?: string[];     // fact-cache keys used, when grounding is enabled
 }
 
 interface RunManifest {
@@ -319,7 +319,8 @@ runtime can be tested without network or spend.
 
 ## 6. Web grounding — `@seldon/grounding` (designed now, stubbed in v1)
 
-Enabled with `--ground`. Two pieces:
+Enabled by default; controlled via the `SELDON_GROUNDING` env var (set to
+`false`/`0`/`off`/`no` to disable). Two pieces:
 
 - **`Fetcher`** — `fetch(slug): Promise<Fact>` retrieves a current summary for an
   entity (Wikipedia extract in v1; pluggable to news/search later). **v1 ships a
@@ -347,7 +348,6 @@ Options:
   --turns <n>           max deliberation turns          (default 4)
   --max-agents <n>      hard cap on total entities       (default 12)
   --concurrency <n>     parallel LLM calls               (default 4)
-  --ground              enable web grounding (v1: stub + cache)
   --save [path]         persist the run manifest (JSON) + report (MD)
                         default off; predictions are ephemeral
   --seed <slug,slug>    force initial entities instead of the seed LLM step
@@ -358,6 +358,9 @@ Options:
 Default behaviour: run in memory, print the Markdown report and the entity list
 to stdout, discard everything else. `--save` writes
 `./seldon-runs/<timestamp>/manifest.json` + `report.md` for the curious.
+
+Settings such as `SELDON_GROUNDING` (grounding on/off) and the Azure OpenAI
+credentials are read from the environment or a `.env` file, not from flags.
 
 Example:
 
