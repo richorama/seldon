@@ -75,13 +75,21 @@ without `temperature`.
 
 A `.env` file (git-ignored) is loaded automatically by the CLI.
 
-Run a prediction:
+Run a prediction — `npm install` builds the CLI automatically (via `prepare`),
+which links the `seldon` command, so you can use `npx`:
 
 ```bash
-npm run seldon -- predict "OPEC+ announces a surprise production cut" --turns 5 --max-agents 15 --verbose
+npx seldon predict "OPEC+ announces a surprise production cut" --turns 5 --max-agents 15 --verbose
 ```
 
-Or, after `npm run build`, invoke the built CLI directly:
+Equivalent npm scripts (handy from the repo root):
+
+```bash
+npm run predict -- "Will the EU and UK agree a new fishing deal?" --save
+npm run seldon  -- predict "..." --verbose      # full CLI, any command/flags
+```
+
+Or invoke the built CLI directly:
 
 ```bash
 node packages/cli/dist/index.js predict "Will the EU and UK agree a new fishing deal?" --save

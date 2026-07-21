@@ -11,12 +11,14 @@
   "scripts": {
     "build": "tsc --build",
     "clean": "tsc --build --clean",
+    "prepare": "tsc --build",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "seldon": "node --experimental-strip-types packages/cli/src/index.ts"
+    "predict": "node packages/cli/dist/index.js predict",
+    "seldon": "node packages/cli/dist/index.js"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
