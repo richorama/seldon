@@ -2,12 +2,42 @@
   "name": "@seldon/vagents",
   "version": "0.1.0",
   "description": "Orleans-style virtual agents (vagents) for LLM deliberations: on-demand activation, a barrier-synchronised turn loop, bounded concurrency and hard caps.",
+  "keywords": [
+    "llm",
+    "agents",
+    "virtual-agents",
+    "multi-agent",
+    "orleans",
+    "simulation"
+  ],
   "license": "MIT",
+  "author": "Richard Astbury",
+  "homepage": "https://github.com/richorama/seldon#readme",
+  "bugs": "https://github.com/richorama/seldon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/richorama/seldon.git",
+    "directory": "packages/vagents"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc --build"

@@ -18,7 +18,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "predict": "node packages/cli/dist/index.js predict",
-    "seldon": "node packages/cli/dist/index.js"
+    "seldon": "node packages/cli/dist/index.js",
+    "publish:dry": "npm publish --dry-run --workspaces",
+    "release": "npm publish --workspaces"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
